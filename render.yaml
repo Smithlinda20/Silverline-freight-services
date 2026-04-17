@@ -12,7 +12,7 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://*.onrender.com
       - key: TIME_ZONE
-        value: Africa/Lagos
+        value: America/New_York
       - key: PYTHON_VERSION
         value: 3.12.1
       - key: ADMIN_EMAIL
