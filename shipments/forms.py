@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import ShipmentOrder, ShipmentReceipt
+from .models import ShipmentOrder
 
 
 class TrackShipmentForm(forms.Form):
@@ -34,11 +34,19 @@ class ShipmentOrderCreateForm(forms.ModelForm):
             "current_location",
             "progress_percent",
             "status",
+            "route_waypoints",
+            "auto_update_enabled",
+            "auto_update_percent_step",
+            "auto_update_interval_minutes",
             "client_notice_option",
             "expected_delivery_date",
         ]
         labels = {
             "client_notice_option": "Important Notice Option (Client Tracking Page)",
+            "route_waypoints": "Route Stops (one location per line)",
+            "auto_update_enabled": "Enable automatic route/progress updates",
+            "auto_update_percent_step": "Auto progress increment (%) per interval",
+            "auto_update_interval_minutes": "Auto update interval (minutes)",
         }
         widgets = {
             "sender_name": forms.TextInput(attrs={"class": "input-field", "placeholder": "Sender full name"}),
@@ -64,6 +72,20 @@ class ShipmentOrderCreateForm(forms.ModelForm):
                 attrs={"class": "input-field", "min": 0, "max": 100, "placeholder": "0 to 100"}
             ),
             "status": forms.Select(attrs={"class": "input-field"}),
+            "route_waypoints": forms.Textarea(
+                attrs={
+                    "class": "input-field",
+                    "rows": 4,
+                    "placeholder": "Chicago Hub\nDallas Hub\nPhoenix Distribution Center",
+                }
+            ),
+            "auto_update_enabled": forms.CheckboxInput(attrs={"class": "checkbox-field"}),
+            "auto_update_percent_step": forms.NumberInput(
+                attrs={"class": "input-field", "min": 1, "max": 100, "placeholder": "e.g. 5"}
+            ),
+            "auto_update_interval_minutes": forms.NumberInput(
+                attrs={"class": "input-field", "min": 1, "placeholder": "e.g. 60"}
+            ),
             "client_notice_option": forms.Select(attrs={"class": "input-field"}),
             "expected_delivery_date": forms.DateInput(attrs={"class": "input-field", "type": "date"}),
         }
@@ -123,45 +145,16 @@ class ShipmentProgressForm(forms.ModelForm):
         }
 
 
-class ShipmentReceiptGeneratorForm(forms.ModelForm):
+class ShipmentAutoUpdateForm(forms.ModelForm):
     class Meta:
-        model = ShipmentReceipt
-        fields = [
-            "location",
-            "device_id",
-            "tid",
-            "item",
-            "recipient_address",
-            "recipient_name",
-            "recipient_number",
-            "schedule_delivery_date",
-            "pricing_option",
-            "shipping_subtotal",
-            "custom_charges",
-            "total",
-        ]
+        model = ShipmentOrder
+        fields = ["auto_update_enabled", "auto_update_percent_step", "auto_update_interval_minutes"]
         widgets = {
-            "location": forms.TextInput(attrs={"class": "input-field", "placeholder": "e.g. New York Hub"}),
-            "device_id": forms.TextInput(attrs={"class": "input-field", "placeholder": "e.g. DEV-4041"}),
-            "tid": forms.TextInput(attrs={"class": "input-field", "placeholder": "Transaction ID"}),
-            "item": forms.TextInput(attrs={"class": "input-field", "placeholder": "e.g. Apple iPad Pro"}),
-            "recipient_address": forms.TextInput(
-                attrs={"class": "input-field", "placeholder": "Recipient address as it appears on receipt"}
+            "auto_update_enabled": forms.CheckboxInput(attrs={"class": "checkbox-field checkbox-field-inline"}),
+            "auto_update_percent_step": forms.NumberInput(
+                attrs={"class": "input-field slim", "min": 1, "max": 100}
             ),
-            "recipient_name": forms.TextInput(attrs={"class": "input-field", "placeholder": "Recipient full name"}),
-            "recipient_number": forms.TextInput(attrs={"class": "input-field", "placeholder": "Recipient phone"}),
-            "schedule_delivery_date": forms.DateInput(attrs={"class": "input-field", "type": "date"}),
-            "pricing_option": forms.TextInput(attrs={"class": "input-field", "placeholder": "Standard rate"}),
-            "shipping_subtotal": forms.NumberInput(attrs={"class": "input-field", "step": "0.01", "min": "0"}),
-            "custom_charges": forms.NumberInput(attrs={"class": "input-field", "step": "0.01", "min": "0"}),
-            "total": forms.NumberInput(
-                attrs={"class": "input-field", "step": "0.01", "min": "0", "placeholder": "Auto if left blank"}
+            "auto_update_interval_minutes": forms.NumberInput(
+                attrs={"class": "input-field slim", "min": 1}
             ),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["location"].required = False
-        self.fields["device_id"].required = False
-        self.fields["tid"].required = False
-        self.fields["total"].required = False

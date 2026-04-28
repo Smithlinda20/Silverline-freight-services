@@ -3,15 +3,32 @@
 {% block title %}SILVERLINE Freight Services | Track Shipment{% endblock %}
 {% block content %}
 <main>
-    <section class="hero">
+    <section class="hero hero-v2">
         <div class="container hero-grid">
             <div class="hero-copy reveal">
-                <p class="eyebrow">Global Logistics Engine</p>
-                <h1>Fast, Trusted, and Fully Trackable Delivery Operations.</h1>
-                <p>SILVERLINE Freight Services gives your clients live tracking visibility while your operations team controls delivery flow from one backend.</p>
+                <p class="eyebrow">SILVERLINE FREIGHT NETWORK</p>
+                <h1>Precision Freight Delivery Across Domestic and International Routes.</h1>
+                <p>
+                    SILVERLINE gives clients real-time shipment visibility while operations teams manage routing,
+                    progress, holds, and releases from one unified backend dashboard.
+                </p>
                 <div class="hero-actions">
                     <a href="#tracking" class="btn btn-primary">Track A Shipment</a>
                     <a href="{% url 'services' %}" class="btn btn-outline">Explore Services</a>
+                </div>
+                <div class="hero-metrics">
+                    <article>
+                        <span>Live</span>
+                        <strong>Progress Updates</strong>
+                    </article>
+                    <article>
+                        <span>Admin</span>
+                        <strong>Order Controls</strong>
+                    </article>
+                    <article>
+                        <span>Fast</span>
+                        <strong>JPG Receipts</strong>
+                    </article>
                 </div>
             </div>
 
@@ -20,9 +37,9 @@
                 <div class="hero-panel">
                     <h3>Operational Highlights</h3>
                     <ul>
-                        <li>Real backend-generated tracking numbers</li>
-                        <li>Automated hold and release workflow</li>
-                        <li>Dedicated admin portal and order controls</li>
+                        <li>Backend-generated tracking numbers</li>
+                        <li>Live shipment progress from 0% to 100%</li>
+                        <li>Hold/release workflow with charge transparency</li>
                     </ul>
                 </div>
             </div>
@@ -33,7 +50,7 @@
         <div class="container">
             <div class="section-head reveal">
                 <p class="eyebrow">Client Tracking Portal</p>
-                <h2>Track your order by tracking number</h2>
+                <h2>Track your shipment with a tracking number</h2>
             </div>
             <form method="get" class="track-form reveal delay-1">
                 {{ track_form.tracking_number }}
@@ -117,6 +134,21 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {% with route_points=order.get_route_points %}
+                                {% if route_points %}
+                                    <div class="route-map">
+                                        <h4>Shipment Route Plan</h4>
+                                        <div class="route-stops">
+                                            {% for stop in route_points %}
+                                                <span class="route-stop {% if forloop.counter0 < order.current_waypoint_index %}passed{% elif forloop.counter0 == order.current_waypoint_index %}current{% else %}pending{% endif %}">
+                                                    {{ stop }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         </div>
 
                         {% if order.hold_active %}
@@ -154,17 +186,18 @@
                                 </p>
                             {% else %}
                                 <p>
-                                    📣 Important Notice:
-
-Please click on the Terms and Conditions below to review and understand our company’s policies and procedures for effective service delivery.
-
+                                    Please click on the Terms and Conditions below to review and understand our company
+                                    policies and procedures for effective service delivery.
                                 </p>
                             {% endif %}
                             <a href="#terms-and-conditions" class="terms-tag">#terms-and-conditions</a>
                         </div>
                     {% else %}
                         <h3>No shipment found</h3>
-                        <p>Tracking number <strong>{{ tracking_number }}</strong> is not in our system yet. Please verify and try again.</p>
+                        <p>
+                            Tracking number <strong>{{ tracking_number }}</strong> is not in our system yet. Please
+                            verify and try again.
+                        </p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -203,53 +236,42 @@ Please click on the Terms and Conditions below to review and understand our comp
     <section id="terms-and-conditions" class="terms-section">
         <div class="container reveal">
             <p class="eyebrow">Terms and Conditions</p>
-            <h2>Silverline Freight Delivery Services</h2>
-            <p>
-                Welcome to Silverline Freight Delivery Services. By using our services, you agree to comply with and be
-                bound by the following Terms and Conditions. Please read them carefully.
-            </p>
-                        <div class="terms-card">
-                <h3>⚠️ Important Notice Regarding Delivery Charges</h3>
+            <h2>Important Notice Regarding Delivery Charges</h2>
+
+            <div class="terms-card">
                 <p>
-                    Please be informed that certain processing charges are applicable during the shipment and delivery of your package. 
-                    These charges include:
+                    Please be informed that certain processing charges are applicable during the shipment and delivery
+                    of your package. These charges include:
                 </p>
                 <ol>
-                    <li>Security and Safety Fee — $150 (Refundable)</li>
-                    <li>Clearance Procedures Fee — $210 (Refundable)</li>
-                    <li>Regulatory Agency Processing Fee — $320 (Refundable)</li>
-                    <li>End-of-Line Processing Fee — $500 (Refundable)</li>
-                    <li>Final Inspection Fee — $600 (Refundable)</li>
-                    <li>Final Handling Fee — $700</li>
+                    <li>Security and Safety Fee - $150 (Refundable)</li>
+                    <li>Clearance Procedures Fee - $210 (Refundable)</li>
+                    <li>Regulatory Agency Processing Fee - $320 (Refundable)</li>
+                    <li>End-of-Line Processing Fee - $500 (Refundable)</li>
+                    <li>Final Inspection Fee - $600 (Refundable)</li>
+                    <li>Final Handling Fee - $700</li>
                 </ol>
-                
                 <p>
-                    <strong>‼️ These fees are temporary security deposits</strong> required to ensure that all regulatory, safety, 
-                    and compliance procedures are properly completed throughout the delivery process.
+                    These fees are temporary security deposits required to ensure that all regulatory, safety, and
+                    compliance procedures are properly completed throughout the delivery process.
                 </p>
-
                 <p>
-                    Upon successful delivery of the package, all refundable charges will be returned in full directly to the recipient 
-                    by the courier at the point of delivery.
+                    Upon successful delivery of the package, all refundable charges will be returned in full directly
+                    to the recipient by the courier at the point of delivery.
                 </p>
-
                 <p>
-                    <strong>⛔️ Please note that the delivery process cannot be completed</strong> unless all required procedures and 
-                    associated charges are fully settled.
+                    Please note that delivery cannot be completed unless all required procedures and associated charges
+                    are fully settled.
                 </p>
-
                 <p>
-                    For any questions or clarification, reach out to our delivery agent on:
-                    <br>
-                    <strong>+1 (559) 889-6546</strong> &amp; <strong>+1 (602) 654-5189</strong>
+                    For assistance, contact our delivery agents:
+                    <strong>+1 (559) 889-6546</strong> and <strong>+1 (602) 654-5189</strong>.
                 </p>
             </div>
 
-           
-
             <p class="terms-thanks">
-                Thank you for choosing Silverline Freight Delivery Services. We appreciate your trust and are committed to
-                delivering your packages safely and efficiently.
+                Thank you for choosing SILVERLINE Freight Services. We appreciate your trust and remain committed to
+                reliable delivery.
             </p>
         </div>
     </section>

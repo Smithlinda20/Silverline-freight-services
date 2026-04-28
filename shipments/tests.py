@@ -1,10 +1,10 @@
-from datetime import date
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
-from .models import ShipmentOrder, ShipmentReceipt
+from .models import ShipmentOrder
 
 
 class ShipmentOrderModelTests(TestCase):
@@ -56,6 +56,25 @@ class TrackingViewTests(TestCase):
         self.assertContains(response, "Mobile Phones")
         self.assertContains(response, "Live Delivery Progress")
         self.assertContains(response, "#terms-and-conditions")
+
+    def test_tracking_request_applies_auto_progress_and_route(self):
+        order = ShipmentOrder.objects.create(
+            from_address="Lagos",
+            to_address="New York",
+            route_waypoints="Accra Hub\nMadrid Hub",
+            current_waypoint_index=0,
+            auto_update_enabled=True,
+            auto_update_percent_step=10,
+            auto_update_interval_minutes=60,
+            auto_update_last_run=timezone.now() - timedelta(hours=2),
+            progress_percent=0,
+            status=ShipmentOrder.ShipmentStatus.PENDING,
+        )
+        self.client.get(reverse("home"), {"tracking_number": order.tracking_number})
+        order.refresh_from_db()
+        self.assertEqual(order.progress_percent, 20)
+        self.assertEqual(order.status, ShipmentOrder.ShipmentStatus.IN_TRANSIT)
+        self.assertEqual(order.current_location, "Madrid Hub")
 
     def test_services_page_loads(self):
         response = self.client.get(reverse("services"))
@@ -122,6 +141,9 @@ class BackendAuthTests(TestCase):
                 "current_location": self.order.current_location,
                 "progress_percent": self.order.progress_percent,
                 "status": self.order.status,
+                "route_waypoints": self.order.route_waypoints,
+                "auto_update_percent_step": self.order.auto_update_percent_step,
+                "auto_update_interval_minutes": self.order.auto_update_interval_minutes,
                 "client_notice_option": self.order.client_notice_option,
                 "expected_delivery_date": self.order.expected_delivery_date or "",
             },
@@ -143,52 +165,18 @@ class BackendAuthTests(TestCase):
         self.assertEqual(response["Content-Type"], "image/jpeg")
         self.assertIn(f"{self.order.tracking_number}-receipt.jpg", response["Content-Disposition"])
 
-    def test_manual_receipt_generation_saves_and_downloads(self):
+    def test_auto_update_settings_can_be_updated(self):
         self.client.login(username=self.user.username, password="TestPass123!")
         response = self.client.post(
-            reverse("generate_manual_receipt"),
+            reverse("update_auto_settings", kwargs={"order_id": self.order.id}),
             {
-                "location": ".",
-                "device_id": "d",
-                "tid": "***********",
-                "item": "Apple iPad Pro",
-                "recipient_address": "601 Dupont Hwy, Harrington Manor, DE 19720",
-                "recipient_name": "Usman khawar",
-                "recipient_number": "Khawar,Usman(...)",
-                "schedule_delivery_date": date(2026, 4, 7).isoformat(),
-                "pricing_option": "Standard rate",
-                "shipping_subtotal": "51.00",
-                "custom_charges": "51.00",
-                "total": "102.00",
+                "auto_update_enabled": "on",
+                "auto_update_percent_step": 12,
+                "auto_update_interval_minutes": 30,
             },
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "image/jpeg")
-        self.assertIn("shipment-receipt-", response["Content-Disposition"])
-        self.assertEqual(ShipmentReceipt.objects.count(), 1)
-
-    def test_manual_receipt_generation_allows_empty_identity_fields(self):
-        self.client.login(username=self.user.username, password="TestPass123!")
-        response = self.client.post(
-            reverse("generate_manual_receipt"),
-            {
-                "location": "",
-                "device_id": "",
-                "tid": "",
-                "item": "Apple iPad Pro",
-                "recipient_address": "601 Dupont Hwy, Harrington Manor, DE 19720",
-                "recipient_name": "Usman khawar",
-                "recipient_number": "Khawar,Usman(...)",
-                "schedule_delivery_date": date(2026, 4, 7).isoformat(),
-                "pricing_option": "Standard rate",
-                "shipping_subtotal": "51.00",
-                "custom_charges": "51.00",
-                "total": "102.00",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "image/jpeg")
-        receipt = ShipmentReceipt.objects.get()
-        self.assertEqual(receipt.location, "")
-        self.assertEqual(receipt.device_id, "")
-        self.assertEqual(receipt.tid, "")
+        self.assertEqual(response.status_code, 302)
+        self.order.refresh_from_db()
+        self.assertTrue(self.order.auto_update_enabled)
+        self.assertEqual(self.order.auto_update_percent_step, 12)
+        self.assertEqual(self.order.auto_update_interval_minutes, 30)

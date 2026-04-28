@@ -1,20 +1,38 @@
 const reveals = document.querySelectorAll(".reveal");
+const siteHeader = document.querySelector(".site-header");
 
-const revealOnScreen = () => {
-    const trigger = window.innerHeight * 0.9;
-    reveals.forEach((item) => {
-        const top = item.getBoundingClientRect().top;
-        if (top < trigger) {
-            item.classList.add("visible");
-        }
-    });
+if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("visible");
+                }
+            });
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -50px 0px" },
+    );
+
+    reveals.forEach((item) => observer.observe(item));
+} else {
+    reveals.forEach((item) => item.classList.add("visible"));
+}
+
+const toggleHeaderState = () => {
+    if (!siteHeader) {
+        return;
+    }
+    if (window.scrollY > 12) {
+        siteHeader.classList.add("scrolled");
+    } else {
+        siteHeader.classList.remove("scrolled");
+    }
 };
 
-window.addEventListener("scroll", revealOnScreen);
-window.addEventListener("load", revealOnScreen);
+window.addEventListener("scroll", toggleHeaderState);
+window.addEventListener("load", toggleHeaderState);
 
 const progressSliders = document.querySelectorAll(".progress-slider");
-
 progressSliders.forEach((slider) => {
     const targetId = slider.dataset.target;
     const output = targetId ? document.getElementById(targetId) : null;

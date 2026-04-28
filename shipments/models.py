@@ -1,6 +1,6 @@
 import secrets
 import string
-from decimal import Decimal, InvalidOperation
+from datetime import timedelta
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -37,6 +37,22 @@ class ShipmentOrder(models.Model):
         choices=ShipmentStatus.choices,
         default=ShipmentStatus.PENDING,
     )
+    route_waypoints = models.TextField(
+        blank=True,
+        default="",
+        help_text="Optional intermediate stops, one per line.",
+    )
+    current_waypoint_index = models.PositiveSmallIntegerField(default=0)
+    auto_update_enabled = models.BooleanField(default=False)
+    auto_update_percent_step = models.PositiveSmallIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+    )
+    auto_update_interval_minutes = models.PositiveIntegerField(
+        default=60,
+        validators=[MinValueValidator(1)],
+    )
+    auto_update_last_run = models.DateTimeField(null=True, blank=True)
     client_notice_option = models.CharField(
         max_length=24,
         choices=NoticeOption.choices,
@@ -68,6 +84,78 @@ class ShipmentOrder(models.Model):
         suffix = "".join(secrets.choice(alphabet) for _ in range(10))
         return f"SLF{suffix}"
 
+    def get_route_points(self):
+        points = []
+        if self.from_address:
+            points.append(self.from_address.strip())
+        for line in (self.route_waypoints or "").splitlines():
+            stop = line.strip()
+            if stop and (not points or points[-1] != stop):
+                points.append(stop)
+        if self.to_address:
+            destination = self.to_address.strip()
+            if not points or points[-1] != destination:
+                points.append(destination)
+        return points
+
+    def apply_auto_progress(self, now=None):
+        if not self.auto_update_enabled or self.hold_active:
+            return False
+        if self.status == self.ShipmentStatus.DELIVERED or self.progress_percent >= 100:
+            self.auto_update_enabled = False
+            self.save(update_fields=["auto_update_enabled"])
+            return False
+
+        now = now or timezone.now()
+        if self.auto_update_last_run is None:
+            self.auto_update_last_run = now
+            self.save(update_fields=["auto_update_last_run"])
+            return False
+
+        interval = max(int(self.auto_update_interval_minutes or 1), 1)
+        elapsed_seconds = (now - self.auto_update_last_run).total_seconds()
+        steps = int(elapsed_seconds // (interval * 60))
+        if steps <= 0:
+            return False
+
+        route_points = self.get_route_points()
+        if route_points:
+            self.current_waypoint_index = min(
+                self.current_waypoint_index + steps,
+                len(route_points) - 1,
+            )
+            self.current_location = route_points[self.current_waypoint_index]
+
+        self.progress_percent = min(
+            100,
+            self.progress_percent + (steps * int(self.auto_update_percent_step or 1)),
+        )
+
+        if self.progress_percent >= 100:
+            self.progress_percent = 100
+            self.status = self.ShipmentStatus.DELIVERED
+            self.auto_update_enabled = False
+            if route_points:
+                self.current_waypoint_index = len(route_points) - 1
+                self.current_location = route_points[-1]
+            elif self.to_address:
+                self.current_location = self.to_address
+        elif self.status == self.ShipmentStatus.PENDING:
+            self.status = self.ShipmentStatus.IN_TRANSIT
+
+        self.auto_update_last_run = self.auto_update_last_run + timedelta(minutes=steps * interval)
+        self.save(
+            update_fields=[
+                "current_waypoint_index",
+                "current_location",
+                "progress_percent",
+                "status",
+                "auto_update_enabled",
+                "auto_update_last_run",
+            ]
+        )
+        return True
+
     def save(self, *args, **kwargs):
         if not self.tracking_number:
             candidate = self._build_tracking_number()
@@ -75,10 +163,22 @@ class ShipmentOrder(models.Model):
                 candidate = self._build_tracking_number()
             self.tracking_number = candidate
 
+        route_points = self.get_route_points()
+        if route_points:
+            if self.current_waypoint_index >= len(route_points):
+                self.current_waypoint_index = len(route_points) - 1
+            if not self.current_location:
+                self.current_location = route_points[self.current_waypoint_index]
+        else:
+            self.current_waypoint_index = 0
+
         if self.progress_percent > 100:
             self.progress_percent = 100
         if self.status == self.ShipmentStatus.DELIVERED and self.progress_percent < 100:
             self.progress_percent = 100
+
+        if self.auto_update_enabled and self.auto_update_last_run is None:
+            self.auto_update_last_run = timezone.now()
 
         if self.hold_active:
             self.status = self.ShipmentStatus.ON_HOLD
@@ -103,7 +203,11 @@ class ShipmentOrder(models.Model):
 
     def release_hold(self):
         self.hold_active = False
-        self.status = self.ShipmentStatus.IN_TRANSIT
+        self.status = (
+            self.ShipmentStatus.DELIVERED
+            if self.progress_percent >= 100
+            else self.ShipmentStatus.IN_TRANSIT
+        )
         self.hold_amount = None
         self.hold_reason = ""
         self.hold_message = ""
@@ -116,44 +220,3 @@ class ShipmentOrder(models.Model):
                 "hold_message",
             ]
         )
-
-
-class ShipmentReceipt(models.Model):
-    location = models.CharField(max_length=180, blank=True, default="")
-    device_id = models.CharField(max_length=120, blank=True, default="")
-    tid = models.CharField(max_length=120, blank=True, default="")
-    item = models.CharField(max_length=200)
-    recipient_address = models.CharField(max_length=260)
-    recipient_name = models.CharField(max_length=160)
-    recipient_number = models.CharField(max_length=90)
-    schedule_delivery_date = models.DateField()
-    pricing_option = models.CharField(max_length=120, default="Standard rate")
-    shipping_subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    custom_charges = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    created_by = models.ForeignKey(
-        "auth.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="generated_receipts",
-    )
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-updated_at"]
-
-    def __str__(self):
-        return f"Receipt #{self.id} - {self.recipient_name} ({self.schedule_delivery_date})"
-
-    def save(self, *args, **kwargs):
-        if self.total is None:
-            try:
-                subtotal = Decimal(str(self.shipping_subtotal or "0"))
-                custom = Decimal(str(self.custom_charges or "0"))
-            except InvalidOperation:
-                subtotal = Decimal("0")
-                custom = Decimal("0")
-            self.total = subtotal + custom
-        super().save(*args, **kwargs)

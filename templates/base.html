@@ -7,10 +7,17 @@
     <title>{% block title %}SILVERLINE Freight Services{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/site.css' %}" />
 </head>
 <body>
+    <div class="top-strip">
+        <div class="container top-strip-inner">
+            <p>Trusted Freight Operations • Real-time Tracking • Compliance-first Delivery</p>
+            <p>Support Line: +1 (559) 889-6546</p>
+        </div>
+    </div>
+
     <header class="site-header">
         <div class="container nav-wrap">
             <a class="brand" href="{% url 'home' %}">
@@ -42,11 +49,12 @@
         <div class="container footer-grid">
             <div>
                 <h3>SILVERLINE Freight Services</h3>
-                <p>Reliable freight logistics and transparent order visibility for every client.</p>
+                <p>Reliable freight logistics and transparent shipment visibility for every client.</p>
             </div>
             <div>
                 <h4>Contact</h4>
                 <p>Email: support@silverlinefreight.com</p>
+                <p>Phone: +1 (559) 889-6546</p>
                 <p>24/7 Logistics Desk</p>
             </div>
         </div>

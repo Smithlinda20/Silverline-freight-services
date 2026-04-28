@@ -1,8 +1,6 @@
 import json
 from io import BytesIO
 from datetime import timedelta
-from pathlib import Path
-from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
 from django.contrib import messages
@@ -19,23 +17,26 @@ from django.views.decorators.http import require_http_methods, require_POST
 from PIL import Image, ImageDraw, ImageFont
 
 from .forms import (
+    ShipmentAutoUpdateForm,
     ShipmentHoldForm,
     ShipmentOrderCreateForm,
     ShipmentOrderEditForm,
     ShipmentProgressForm,
-    ShipmentReceiptGeneratorForm,
     ShipmentStatusForm,
     TrackShipmentForm,
 )
-from .models import ShipmentOrder, ShipmentReceipt
+from .models import ShipmentOrder
 
 TERMS_SHORT_NOTE = (
     "Processing charges can apply during security, clearance, and regulatory stages. "
     "These processing charges are temporary and fully refundable after successful delivery."
 )
 
-MANUAL_RECEIPT_BASE_WIDTH = 853
-MANUAL_RECEIPT_BASE_HEIGHT = 1280
+
+def _apply_automatic_updates(orders):
+    now = timezone.now()
+    for order in orders:
+        order.apply_auto_progress(now=now)
 
 
 def _load_receipt_font(size: int, *, bold: bool = False):
@@ -270,151 +271,6 @@ def _build_receipt_image(order: ShipmentOrder) -> BytesIO:
     return buffer
 
 
-def _resolve_manual_receipt_template_path() -> Path:
-    assets_dir = settings.BASE_DIR / "Assets"
-    direct_candidates = (
-        "image1.jpg",
-        "Receipt1.jpg",
-        "receipt1.jpg",
-    )
-    for name in direct_candidates:
-        candidate = assets_dir / name
-        if candidate.exists():
-            return candidate
-
-    pattern_candidates = (
-        "*image1*.jpg",
-        "*Receipt1*.jpg",
-        "*receipt1*.jpg",
-    )
-    for pattern in pattern_candidates:
-        matches = sorted(assets_dir.glob(pattern))
-        if matches:
-            return matches[0]
-
-    raise FileNotFoundError("Receipt template image not found in Assets directory.")
-
-
-def _draw_trimmed_text(draw, value: str, x: int, y: int, max_width: int, *, font, fill: str):
-    text = str(value or "").strip()
-    if not text:
-        return
-    if draw.textlength(text, font=font) <= max_width:
-        draw.text((x, y), text, font=font, fill=fill)
-        return
-
-    trimmed = text
-    while trimmed and draw.textlength(f"{trimmed}...", font=font) > max_width:
-        trimmed = trimmed[:-1]
-    draw.text((x, y), f"{trimmed}..." if trimmed else "...", font=font, fill=fill)
-
-
-def _build_manual_receipt_image(receipt: ShipmentReceipt) -> BytesIO:
-    template_path = _resolve_manual_receipt_template_path()
-    image = Image.open(template_path).convert("RGB")
-    draw = ImageDraw.Draw(image)
-
-    width_scale = image.width / MANUAL_RECEIPT_BASE_WIDTH
-    height_scale = image.height / MANUAL_RECEIPT_BASE_HEIGHT
-    scale = min(width_scale, height_scale)
-
-    def sx(value: int) -> int:
-        return int(round(value * width_scale))
-
-    def sy(value: int) -> int:
-        return int(round(value * height_scale))
-
-    def sw(value: int) -> int:
-        return max(1, int(round(value * width_scale)))
-
-    base_font_size = max(14, int(round(18 * scale)))
-    font = _load_receipt_font(base_font_size)
-    amount_font = _load_receipt_font(max(13, int(round(16 * scale))))
-    ink = "#1f1f1f"
-
-    # Top identity fields.
-    _draw_trimmed_text(draw, receipt.location, sx(248), sy(246), sw(205), font=font, fill=ink)
-    _draw_trimmed_text(draw, receipt.device_id, sx(246), sy(268), sw(207), font=font, fill=ink)
-    _draw_trimmed_text(draw, receipt.tid, sx(219), sy(290), sw(237), font=font, fill=ink)
-
-    # Mid body fields.
-    _draw_trimmed_text(draw, receipt.item, sx(224), sy(447), sw(304), font=font, fill=ink)
-    _draw_trimmed_text(draw, receipt.recipient_address, sx(301), sy(628), sw(229), font=font, fill=ink)
-    _draw_trimmed_text(draw, receipt.recipient_name, sx(313), sy(665), sw(217), font=font, fill=ink)
-    _draw_trimmed_text(draw, receipt.recipient_number, sx(338), sy(703), sw(192), font=font, fill=ink)
-    _draw_trimmed_text(
-        draw,
-        receipt.schedule_delivery_date.strftime("%m-%d-%Y"),
-        sx(365),
-        sy(742),
-        sw(165),
-        font=font,
-        fill=ink,
-    )
-    pricing_text = str(receipt.pricing_option or "").strip()
-    if pricing_text and pricing_text.lower() not in {"standard", "standard rate"}:
-        _draw_trimmed_text(draw, pricing_text, sx(367), sy(767), sw(163), font=font, fill=ink)
-
-    # Charges area.
-    _draw_trimmed_text(
-        draw,
-        _format_receipt_amount(receipt.shipping_subtotal),
-        sx(412),
-        sy(848),
-        sw(118),
-        font=amount_font,
-        fill=ink,
-    )
-    _draw_trimmed_text(
-        draw,
-        _format_receipt_amount(receipt.custom_charges),
-        sx(419),
-        sy(874),
-        sw(111),
-        font=amount_font,
-        fill=ink,
-    )
-    _draw_trimmed_text(
-        draw,
-        _format_receipt_amount(receipt.total),
-        sx(350),
-        sy(889),
-        sw(81),
-        font=amount_font,
-        fill=ink,
-    )
-
-    buffer = BytesIO()
-    image.save(buffer, format="JPEG", quality=95)
-    buffer.seek(0)
-    return buffer
-
-
-def _manual_receipt_download_response(receipt: ShipmentReceipt) -> HttpResponse:
-    image_stream = _build_manual_receipt_image(receipt)
-    response = HttpResponse(image_stream.getvalue(), content_type="image/jpeg")
-    response["Content-Disposition"] = (
-        f'attachment; filename="shipment-receipt-{receipt.id}-{receipt.schedule_delivery_date:%Y%m%d}.jpg"'
-    )
-    return response
-
-
-def _format_currency(value) -> str:
-    try:
-        amount = Decimal(str(value))
-    except (InvalidOperation, TypeError):
-        amount = Decimal("0")
-    return f"${amount:.2f}"
-
-
-def _format_receipt_amount(value) -> str:
-    try:
-        amount = Decimal(str(value))
-    except (InvalidOperation, TypeError):
-        amount = Decimal("0")
-    return f"{amount:.2f}"
-
-
 def home(request: HttpRequest) -> HttpResponse:
     form = TrackShipmentForm(request.GET or None)
     order = None
@@ -425,6 +281,9 @@ def home(request: HttpRequest) -> HttpResponse:
         lookup_attempted = True
         tracking_number = form.cleaned_data["tracking_number"].strip().upper()
         order = ShipmentOrder.objects.filter(tracking_number__iexact=tracking_number).first()
+        if order:
+            _apply_automatic_updates([order])
+            order.refresh_from_db()
 
     context = {
         "track_form": form,
@@ -467,18 +326,20 @@ def backend_logout(request: HttpRequest) -> HttpResponse:
 @login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
     search_query = request.GET.get("tracking", "").strip().upper()
+    status_filter = request.GET.get("status", "").strip()
+    _apply_automatic_updates(ShipmentOrder.objects.filter(auto_update_enabled=True))
     base_orders = ShipmentOrder.objects.all()
     orders = base_orders
     if search_query:
         orders = orders.filter(tracking_number__icontains=search_query)
         if not orders.exists():
             messages.info(request, f"No order found with tracking number matching '{search_query}'.")
+    if status_filter:
+        orders = orders.filter(status=status_filter)
 
     create_form = ShipmentOrderCreateForm()
-    receipt_form = ShipmentReceiptGeneratorForm()
     hold_form = ShipmentHoldForm()
     status_form = ShipmentStatusForm()
-    recent_receipts = ShipmentReceipt.objects.select_related("created_by")[:10]
 
     today = timezone.localdate()
     start_date = today - timedelta(days=6)
@@ -496,12 +357,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     context = {
         "create_form": create_form,
-        "receipt_form": receipt_form,
         "hold_form": hold_form,
         "status_form": status_form,
-        "recent_receipts": recent_receipts,
         "orders": orders,
         "search_query": search_query,
+        "status_filter": status_filter,
         "total_orders": base_orders.count(),
         "delivered_orders": base_orders.filter(status=ShipmentOrder.ShipmentStatus.DELIVERED).count(),
         "transit_orders": base_orders.filter(status=ShipmentOrder.ShipmentStatus.IN_TRANSIT).count(),
@@ -509,66 +369,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "today_orders": base_orders.filter(created_at__date=today).count(),
         "chart_labels": json.dumps(chart_labels),
         "chart_values": json.dumps(chart_values),
+        "status_choices": ShipmentOrder.ShipmentStatus.choices,
     }
     return render(request, "backend/dashboard.html", context)
-
-
-@login_required
-@require_POST
-def generate_manual_receipt(request: HttpRequest) -> HttpResponse:
-    form = ShipmentReceiptGeneratorForm(request.POST)
-    if not form.is_valid():
-        messages.error(request, "Receipt form is incomplete. Fill all required fields and try again.")
-        return redirect("dashboard")
-
-    receipt = form.save(commit=False)
-    receipt.created_by = request.user
-    receipt.save()
-
-    try:
-        return _manual_receipt_download_response(receipt)
-    except FileNotFoundError:
-        messages.error(
-            request,
-            "Receipt template image is missing in Assets. Add image1.jpg or Receipt1.jpg and try again.",
-        )
-        return redirect("dashboard")
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
-def edit_manual_receipt(request: HttpRequest, receipt_id: int) -> HttpResponse:
-    receipt = get_object_or_404(ShipmentReceipt, id=receipt_id)
-    form = ShipmentReceiptGeneratorForm(request.POST or None, instance=receipt)
-    if request.method == "POST" and form.is_valid():
-        updated_receipt = form.save()
-        if request.POST.get("action") == "generate":
-            try:
-                return _manual_receipt_download_response(updated_receipt)
-            except FileNotFoundError:
-                messages.error(
-                    request,
-                    "Receipt template image is missing in Assets. Add image1.jpg or Receipt1.jpg and try again.",
-                )
-                return redirect("dashboard")
-
-        messages.success(request, "Shipment receipt data updated.")
-        return redirect("dashboard")
-
-    return render(request, "backend/edit_receipt.html", {"form": form, "receipt": receipt})
-
-
-@login_required
-def download_manual_receipt(request: HttpRequest, receipt_id: int) -> HttpResponse:
-    receipt = get_object_or_404(ShipmentReceipt, id=receipt_id)
-    try:
-        return _manual_receipt_download_response(receipt)
-    except FileNotFoundError:
-        messages.error(
-            request,
-            "Receipt template image is missing in Assets. Add image1.jpg or Receipt1.jpg and try again.",
-        )
-        return redirect("dashboard")
 
 
 @login_required
@@ -643,6 +446,25 @@ def update_progress(request: HttpRequest, order_id: int) -> HttpResponse:
         messages.success(request, f"Progress updated for {order.tracking_number}: {updated_order.progress_percent}%.")
     else:
         messages.error(request, "Progress update failed. Enter a value from 0 to 100.")
+    return redirect("dashboard")
+
+
+@login_required
+@require_POST
+def update_auto_settings(request: HttpRequest, order_id: int) -> HttpResponse:
+    order = get_object_or_404(ShipmentOrder, id=order_id)
+    form = ShipmentAutoUpdateForm(request.POST, instance=order)
+    if form.is_valid():
+        updated_order = form.save(commit=False)
+        if updated_order.auto_update_enabled and updated_order.auto_update_last_run is None:
+            updated_order.auto_update_last_run = timezone.now()
+        updated_order.save()
+        messages.success(
+            request,
+            f"Auto movement settings updated for {updated_order.tracking_number}.",
+        )
+    else:
+        messages.error(request, "Auto movement update failed. Verify values and try again.")
     return redirect("dashboard")
 
 
