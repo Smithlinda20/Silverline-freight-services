@@ -72,18 +72,25 @@ WSGI_APPLICATION = 'silverline_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    DATABASES = {
-        "default": dj_database_url.parse(database_url, conn_max_age=600, ssl_require=True),
+
+
+# 1. Define a default local SQLite database
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-            "NAME": os.getenv("DB_NAME", str(BASE_DIR / "db.sqlite3")),
-        }
-    }
+}
+
+# 2. Only override with the Render Postgres URL if we are actually ON Render
+if os.getenv("RENDER"):
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        DATABASES["default"] = dj_database_url.parse(
+            database_url, 
+            conn_max_age=600, 
+            ssl_require=True
+        )
 
 
 # Password validation
@@ -138,3 +145,8 @@ LOGOUT_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+
+# Or if you want to be extra safe:
+DEBUG = os.getenv("DEBUG", "False") == "True" or not os.getenv("RENDER")

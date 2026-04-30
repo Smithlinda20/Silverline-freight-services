@@ -2,65 +2,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}SILVERLINE Freight Services{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/site.css' %}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SILVERLINE Freight Services — Real-time shipment tracking, precision logistics, and compliance-first delivery across domestic and international routes." />
+  <title>{% block title %}SILVERLINE Freight Services{% endblock %}</title>
+
+  <!-- Fonts: Barlow Condensed (display) + DM Sans (body) + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="{% static 'css/site.css' %}" />
+  {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="top-strip">
-        <div class="container top-strip-inner">
-            <p>Trusted Freight Operations • Real-time Tracking • Compliance-first Delivery</p>
-            <p>Support Line: +1 (559) 889-6546</p>
-        </div>
+
+  <!-- ── TOP STRIP ── -->
+  <div class="top-strip">
+    <div class="container top-strip-inner">
+      <p>Trusted Freight Operations &nbsp;•&nbsp; Real-time Tracking &nbsp;•&nbsp; Compliance-first Delivery</p>
+      <p>24/7 Support Line: <strong>+1 (559) 889-6546</strong></p>
     </div>
+  </div>
 
-    <header class="site-header">
-        <div class="container nav-wrap">
-            <a class="brand" href="{% url 'home' %}">
-                <img src="{% static 'images/silverline-logo.jpg' %}" alt="SILVERLINE Freight Services logo" />
-                <div>
-                    <p class="brand-name">SILVERLINE</p>
-                    <p class="brand-sub">Freight Services</p>
-                </div>
-            </a>
-            <nav>
-                <a href="{% url 'home' %}#tracking">Track Order</a>
-                <a href="{% url 'services' %}">Services</a>
-                <a href="{% url 'home' %}#contact">Contact</a>
-            </nav>
+  <!-- ── HEADER ── -->
+  <header class="site-header" id="siteHeader">
+    <div class="container nav-wrap">
+
+      <!-- Brand -->
+      <a class="brand" href="{% url 'home' %}">
+        <img src="{% static 'images/silverline-logo.jpg' %}" alt="SILVERLINE Freight Services logo" />
+        <div>
+          <p class="brand-name">SILVERLINE</p>
+          <p class="brand-sub">Freight Services</p>
         </div>
-    </header>
+      </a>
 
-    {% if messages %}
-        <div class="container alerts">
-            {% for message in messages %}
-                <div class="alert {{ message.tags }}">{{ message }}</div>
-            {% endfor %}
+      <!-- Desktop nav -->
+      <nav id="mainNav">
+        <a href="{% url 'home' %}#tracking">Track Order</a>
+        <a href="{% url 'services' %}">Services</a>
+        <a href="{% url 'home' %}#terms-and-conditions">Policies</a>
+        <a href="{% url 'home' %}#contact">Contact</a>
+        <a href="{% url 'home' %}#tracking" class="nav-cta">Track Now</a>
+      </nav>
+
+      <!-- Mobile hamburger -->
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── DJANGO MESSAGES ── -->
+  {% if messages %}
+    <div class="container alerts">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ── PAGE CONTENT ── -->
+  {% block content %}{% endblock %}
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+
+        <!-- Brand col -->
+        <div>
+          <h3>SILVERLINE Freight Services</h3>
+          <p>Precision logistics and transparent shipment visibility for businesses and individuals across domestic and international routes.</p>
+          <p style="margin-top:1.25rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--faint);text-transform:uppercase;letter-spacing:0.1em;">
+            Est. 2018 &nbsp;•&nbsp; Licensed & Insured &nbsp;•&nbsp; 90+ Routes
+          </p>
         </div>
-    {% endif %}
 
-    {% block content %}{% endblock %}
-
-    <footer id="contact" class="site-footer">
-        <div class="container footer-grid">
-            <div>
-                <h3>SILVERLINE Freight Services</h3>
-                <p>Reliable freight logistics and transparent shipment visibility for every client.</p>
-            </div>
-            <div>
-                <h4>Contact</h4>
-                <p>Email: support@silverlinefreight.com</p>
-                <p>Phone: +1 (559) 889-6546</p>
-                <p>24/7 Logistics Desk</p>
-            </div>
+        <!-- Contact col -->
+        <div>
+          <h4>Get In Touch</h4>
+          <p>✉ support@silverlinefreight.com</p>
+          <p>📞 +1 (559) 889-6546</p>
+          <p>📞 +1 (602) 654-5189</p>
+          <p style="margin-top:0.75rem;">⏱ 24/7 Logistics Desk</p>
         </div>
-    </footer>
 
-    <script src="{% static 'js/site.js' %}"></script>
-    {% block scripts %}{% endblock %}
+      </div>
+
+      <!-- Footer bottom bar -->
+      <div class="footer-bottom">
+        <span>© {% now "Y" %} SILVERLINE Freight Services. All rights reserved.</span>
+        <span>Track. Move. Deliver.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/site.js' %}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

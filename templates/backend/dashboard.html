@@ -1,215 +1,277 @@
 {% extends "base.html" %}
-{% block title %}Backend Dashboard | SILVERLINE Freight Services{% endblock %}
+{% block title %}Control Center | SILVERLINE Freight Services{% endblock %}
+
 {% block content %}
 <main class="dashboard-main">
-    <section class="container dashboard-head reveal">
-        <div>
-            <p class="eyebrow">Admin Backend</p>
-            <h1>Shipment Control Center</h1>
-            <p class="dashboard-subcopy">Monitor shipment flow, apply holds, release payments, and update progress in real time.</p>
-        </div>
-        <form method="post" action="{% url 'backend_logout' %}">
-            {% csrf_token %}
-            <button class="btn btn-outline" type="submit">Logout</button>
-        </form>
-    </section>
 
-    <section class="container analytics-panel reveal delay-1">
-        <div class="analytics-cards">
-            <article>
-                <p>Total Orders</p>
-                <h3>{{ total_orders }}</h3>
-            </article>
-            <article>
-                <p>Delivered</p>
-                <h3>{{ delivered_orders }}</h3>
-            </article>
-            <article>
-                <p>In Transit</p>
-                <h3>{{ transit_orders }}</h3>
-            </article>
-            <article>
-                <p>On Hold</p>
-                <h3>{{ hold_orders }}</h3>
-            </article>
-            <article>
-                <p>Created Today</p>
-                <h3>{{ today_orders }}</h3>
-            </article>
-        </div>
-    </section>
+  <!-- ══════════════════════════════════════════════
+       DASHBOARD HEADER
+  ══════════════════════════════════════════════ -->
+  <section class="container dashboard-head reveal">
+    <div>
+      <p class="eyebrow">Admin Backend</p>
+      <h1>Shipment Control Center</h1>
+      <p class="dashboard-subcopy">
+        Monitor shipment flow, apply holds, release payments, and update progress in real time.
+      </p>
+    </div>
+    <form method="post" action="{% url 'backend_logout' %}">
+      {% csrf_token %}
+      <button class="btn btn-outline" type="submit">↩ Logout</button>
+    </form>
+  </section>
 
-    <section class="container dashboard-toolbar reveal delay-1">
-        <form method="get" class="dashboard-search-form">
-            <input
-                type="text"
-                name="tracking"
-                value="{{ search_query }}"
-                class="input-field"
-                placeholder="Search by tracking number"
-            />
-            <select name="status" class="input-field">
-                <option value="">All statuses</option>
-                {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary">Apply Filter</button>
-            <a href="{% url 'dashboard' %}" class="btn btn-outline">Reset</a>
-        </form>
-    </section>
+  <!-- ══════════════════════════════════════════════
+       ANALYTICS CARDS
+  ══════════════════════════════════════════════ -->
+  <section class="container analytics-panel reveal delay-1">
+    <div class="analytics-cards">
+      <article>
+        <p>Total Orders</p>
+        <h3>{{ total_orders }}</h3>
+      </article>
+      <article>
+        <p>Delivered</p>
+        <h3>{{ delivered_orders }}</h3>
+      </article>
+      <article>
+        <p>In Transit</p>
+        <h3>{{ transit_orders }}</h3>
+      </article>
+      <article>
+        <p>On Hold</p>
+        <h3>{{ hold_orders }}</h3>
+      </article>
+      <article>
+        <p>Created Today</p>
+        <h3>{{ today_orders }}</h3>
+      </article>
+    </div>
+  </section>
 
-    <section class="container dashboard-grid">
-        <article class="card reveal">
-            <h2>Create New Order</h2>
-            <form method="post" action="{% url 'create_order' %}" class="stack-form">
-                {% csrf_token %}
-                {% for field in create_form %}
-                    <div class="field-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <small class="form-error">{{ field.errors|striptags }}</small>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">Generate Tracking Number</button>
-            </form>
-        </article>
+  <!-- ══════════════════════════════════════════════
+       SEARCH / FILTER TOOLBAR
+  ══════════════════════════════════════════════ -->
+  <section class="container dashboard-toolbar reveal delay-1">
+    <form method="get" class="dashboard-search-form">
+      <input
+        type="text"
+        name="tracking"
+        value="{{ search_query }}"
+        class="input-field"
+        placeholder="🔍  Search by tracking number…"
+      />
+      <select name="status" class="input-field">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Apply Filter</button>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline">Reset</a>
+    </form>
+  </section>
 
-        <article class="card wide reveal delay-1">
-            <h2>Shipment Orders</h2>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tracking</th>
-                            <th>Route</th>
-                            <th>Items</th>
-                            <th>Status</th>
-                            <th>Progress</th>
-                            <th>Hold</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                            <tr>
-                                <td>
-                                    <strong>{{ order.tracking_number }}</strong><br />
-                                    <small>{{ order.created_at|date:"Y-m-d H:i" }}</small>
-                                </td>
-                                <td>
-                                    <small>From:</small> {{ order.from_address|truncatechars:50 }}<br />
-                                    <small>To:</small> {{ order.to_address|truncatechars:50 }}<br />
-                                    <small>Current:</small> {{ order.current_location|default:"-" }}
-                                    {% with route_points=order.get_route_points %}
-                                        {% if route_points %}
-                                            <div class="route-stops">
-                                                {% for stop in route_points %}
-                                                    <span class="route-stop {% if forloop.counter0 < order.current_waypoint_index %}passed{% elif forloop.counter0 == order.current_waypoint_index %}current{% else %}pending{% endif %}">
-                                                        {{ stop|truncatechars:28 }}
-                                                    </span>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
-                                <td>
-                                    <strong>{{ order.item_name }}</strong><br />
-                                    <small>Qty: {{ order.item_quantity }}</small>
-                                    {% if order.item_weight_kg %}
-                                        <br /><small>{{ order.item_weight_kg }} kg</small>
-                                    {% endif %}
-                                    {% if order.item_description %}
-                                        <p><small>{{ order.item_description|truncatechars:80 }}</small></p>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span>
-                                </td>
-                                <td>
-                                    <strong>{{ order.progress_percent }}%</strong>
-                                    <div class="mini-progress-track">
-                                        <div class="mini-progress-fill" style="width: {{ order.progress_percent }}%;"></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    {% if order.hold_active %}
-                                        <strong>On Hold</strong><br />
-                                        {% if order.hold_amount %}<small>${{ order.hold_amount }}</small>{% endif %}
-                                    {% else %}
-                                        <small>None</small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="quick-row-actions">
-                                        <a href="{% url 'edit_order' order.id %}" class="btn btn-sm btn-outline">Edit</a>
-                                        <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-sm btn-secondary">Receipt JPG</a>
-                                        <form method="post" action="{% url 'delete_order' order.id %}" onsubmit="return confirm('Delete this order permanently?');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                        </form>
-                                    </div>
+  <!-- ══════════════════════════════════════════════
+       MAIN GRID: CREATE FORM + ORDERS TABLE
+  ══════════════════════════════════════════════ -->
+  <section class="container dashboard-grid">
 
-                                    <form method="post" action="{% url 'update_progress' order.id %}" class="inline-form progress-update-form">
-                                        {% csrf_token %}
-                                        <input
-                                            type="range"
-                                            name="progress_percent"
-                                            min="0"
-                                            max="100"
-                                            value="{{ order.progress_percent }}"
-                                            class="progress-slider"
-                                            data-target="progress-value-{{ order.id }}"
-                                        />
-                                        <span class="progress-value" id="progress-value-{{ order.id }}">{{ order.progress_percent }}%</span>
-                                        <button type="submit" class="btn btn-sm">Set Progress</button>
-                                    </form>
+    <!-- CREATE ORDER CARD -->
+    <article class="card reveal">
+      <h2>Create New Order</h2>
+      <form method="post" action="{% url 'create_order' %}" class="stack-form">
+        {% csrf_token %}
+        {% for field in create_form %}
+          <div class="field-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <small class="form-error">{{ field.errors|striptags }}</small>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">
+          ▸ Generate Tracking Number
+        </button>
+      </form>
+    </article>
 
-                                    <form method="post" action="{% url 'update_auto_settings' order.id %}" class="inline-form auto-settings-form">
-                                        {% csrf_token %}
-                                        <label class="auto-toggle">
-                                            <input type="checkbox" name="auto_update_enabled" class="checkbox-field checkbox-field-inline" {% if order.auto_update_enabled %}checked{% endif %} />
-                                            Auto
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="auto_update_percent_step"
-                                            class="input-field slim"
-                                            min="1"
-                                            max="100"
-                                            value="{{ order.auto_update_percent_step }}"
-                                            title="Progress increase per interval"
-                                        />
-                                        <input
-                                            type="number"
-                                            name="auto_update_interval_minutes"
-                                            class="input-field slim"
-                                            min="1"
-                                            value="{{ order.auto_update_interval_minutes }}"
-                                            title="Interval in minutes"
-                                        />
-                                        <button type="submit" class="btn btn-sm btn-secondary">Save Auto</button>
-                                    </form>
+    <!-- ORDERS TABLE CARD -->
+    <article class="card wide reveal delay-1">
+      <h2>
+        Shipment Orders
+        <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
+                     color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
+          {{ orders|length }} record{% if orders|length != 1 %}s{% endif %}
+        </span>
+      </h2>
 
-                                    <form method="post" action="{% url 'update_status' order.id %}" class="inline-form">
-                                        {% csrf_token %}
-                                        <select name="status" class="input-field slim">
-                                            {% for value, label in order.ShipmentStatus.choices %}
-                                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <input class="input-field slim" name="current_location" value="{{ order.current_location }}" />
-                                        <input class="input-field slim" type="date" name="expected_delivery_date" value="{{ order.expected_delivery_date|date:'Y-m-d' }}" />
-                                        <button type="submit" class="btn btn-sm">Update</button>
-                                    </form>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Route</th>
+              <th>Items</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Hold</th>
+              <th style="min-width:300px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr>
 
-                                    <form method="post" action="{% url 'place_hold' order.id %}" class="inline-form hold-form">
-                                        {% csrf_token %}
-                                        <input type="number" name="hold_amount" step="0.01" placeholder="Charge" class="input-field slim" required />
-                                        <input type="text" name="hold_reason" placeholder="Hold reason" class="input-field slim" required />
-                                        <textarea name="hold_message" class="input-field slim" rows="5" placeholder="Message shown to client">Your order is currently on hold due to applicable charges (Safety and Security Fee).
+                <!-- Tracking # + date -->
+                <td>
+                  <strong style="font-family:var(--font-mono);color:var(--amber);
+                                 font-size:0.82rem;letter-spacing:0.04em;">
+                    {{ order.tracking_number }}
+                  </strong><br>
+                  <small>{{ order.created_at|date:"Y-m-d H:i" }}</small>
+                </td>
+
+                <!-- Route -->
+                <td>
+                  <small>From:</small> {{ order.from_address|truncatechars:40 }}<br>
+                  <small>To:</small> {{ order.to_address|truncatechars:40 }}<br>
+                  <small>Loc:</small> {{ order.current_location|default:"—" }}
+                  {% with route_points=order.get_route_points %}
+                    {% if route_points %}
+                      <div class="route-stops" style="margin-top:6px;">
+                        {% for stop in route_points %}
+                          <span class="route-stop
+                            {% if forloop.counter0 < order.current_waypoint_index %}passed
+                            {% elif forloop.counter0 == order.current_waypoint_index %}current
+                            {% else %}pending{% endif %}">
+                            {{ stop|truncatechars:22 }}
+                          </span>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+
+                <!-- Items -->
+                <td>
+                  <strong>{{ order.item_name }}</strong><br>
+                  <small>Qty: {{ order.item_quantity }}</small>
+                  {% if order.item_weight_kg %}<br><small>{{ order.item_weight_kg }} kg</small>{% endif %}
+                  {% if order.item_description %}
+                    <br><small style="color:var(--muted);">{{ order.item_description|truncatechars:60 }}</small>
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span>
+                </td>
+
+                <!-- Progress -->
+                <td>
+                  <strong style="font-family:var(--font-display);font-size:1.2rem;color:var(--amber);">
+                    {{ order.progress_percent }}%
+                  </strong>
+                  <div class="mini-progress-track">
+                    <div class="mini-progress-fill" style="width:{{ order.progress_percent }}%;"></div>
+                  </div>
+                </td>
+
+                <!-- Hold -->
+                <td>
+                  {% if order.hold_active %}
+                    <span class="status-pill on_hold">On Hold</span>
+                    {% if order.hold_amount %}
+                      <br><small style="color:var(--danger);font-weight:700;margin-top:4px;display:block;">
+                        ${{ order.hold_amount }}
+                      </small>
+                    {% endif %}
+                  {% else %}
+                    <small style="color:var(--muted);">None</small>
+                  {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td>
+
+                  <!-- Primary buttons -->
+                  <div class="quick-row-actions">
+                    <a href="{% url 'edit_order' order.id %}" class="btn btn-sm btn-outline">✏ Edit</a>
+                    <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-sm btn-secondary">⬇ Receipt</a>
+                    <form method="post" action="{% url 'delete_order' order.id %}"
+                          onsubmit="return confirm('Permanently delete {{ order.tracking_number }}?');"
+                          style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger">✕</button>
+                    </form>
+                  </div>
+
+                  <!-- Progress slider -->
+                  <form method="post" action="{% url 'update_progress' order.id %}"
+                        class="inline-form progress-update-form">
+                    {% csrf_token %}
+                    <input type="range" name="progress_percent"
+                           min="0" max="100" value="{{ order.progress_percent }}"
+                           class="progress-slider" data-target="pv-{{ order.id }}" />
+                    <span class="progress-value" id="pv-{{ order.id }}">{{ order.progress_percent }}%</span>
+                    <button type="submit" class="btn btn-sm">Set</button>
+                  </form>
+
+                  <!-- Auto-update -->
+                  <form method="post" action="{% url 'update_auto_settings' order.id %}"
+                        class="inline-form auto-settings-form">
+                    {% csrf_token %}
+                    <label class="auto-toggle">
+                      <input type="checkbox" name="auto_update_enabled"
+                             class="checkbox-field checkbox-field-inline"
+                             {% if order.auto_update_enabled %}checked{% endif %} />
+                      Auto
+                    </label>
+                    <input type="number" name="auto_update_percent_step"
+                           class="input-field slim" min="1" max="100"
+                           value="{{ order.auto_update_percent_step }}"
+                           title="% step" style="width:50px;" />
+                    <input type="number" name="auto_update_interval_minutes"
+                           class="input-field slim" min="1"
+                           value="{{ order.auto_update_interval_minutes }}"
+                           title="Interval (mins)" style="width:50px;" />
+                    <button type="submit" class="btn btn-sm btn-secondary">Save</button>
+                  </form>
+
+                  <!-- Status / location / date -->
+                  <form method="post" action="{% url 'update_status' order.id %}"
+                        class="inline-form">
+                    {% csrf_token %}
+                    <select name="status" class="input-field slim" style="flex:1;min-width:110px;">
+                      {% for value, label in order.ShipmentStatus.choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                          {{ label }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    <input class="input-field slim" name="current_location"
+                           value="{{ order.current_location }}" placeholder="Location" style="flex:1;" />
+                    <input class="input-field slim" type="date" name="expected_delivery_date"
+                           value="{{ order.expected_delivery_date|date:'Y-m-d' }}" />
+                    <button type="submit" class="btn btn-sm">Update</button>
+                  </form>
+
+                  <!-- Place hold -->
+                  <form method="post" action="{% url 'place_hold' order.id %}"
+                        class="inline-form hold-form">
+                    {% csrf_token %}
+                    <input type="number" name="hold_amount" step="0.01"
+                           placeholder="$ Charge" class="input-field slim"
+                           style="width:80px;" required />
+                    <input type="text" name="hold_reason"
+                           placeholder="Hold reason" class="input-field slim"
+                           style="flex:1;" required />
+                    <textarea name="hold_message" class="input-field slim" rows="5"
+                              placeholder="Message shown to client">Your order is currently on hold due to applicable charges (Safety and Security Fee).
 To proceed with processing, kindly complete the required payment below. Please note that this fee is fully refundable.
 
 Accepted payment options:
@@ -221,69 +283,103 @@ Accepted payment options:
 For assistance:
 +1 (559) 889-6546
 +1 (602) 654-5189</textarea>
-                                        <button type="submit" class="btn btn-sm btn-warn">Withhold</button>
-                                    </form>
+                    <button type="submit" class="btn btn-sm btn-warn">⚠ Withhold</button>
+                  </form>
 
-                                    <form method="post" action="{% url 'release_hold' order.id %}" class="inline-form">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success">Release Hold</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="7">No shipments match your filter yet. Create a new order or reset search.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </article>
-    </section>
+                  <!-- Release hold -->
+                  <form method="post" action="{% url 'release_hold' order.id %}"
+                        class="inline-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success">✓ Release Hold</button>
+                  </form>
 
-    <section class="container analytics-panel reveal delay-2">
-        <div class="analytics-chart-card">
-            <h3>Orders Created (Last 7 Days)</h3>
-            <canvas id="ordersTrendChart" height="100"></canvas>
-        </div>
-    </section>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7">
+                  <div style="text-align:center;padding:3rem 2rem;color:var(--muted);">
+                    <div style="font-size:2.5rem;margin-bottom:0.75rem;">📦</div>
+                    <p style="font-size:0.95rem;">No shipments match your filter.</p>
+                    <p style="font-size:0.82rem;margin-top:0.4rem;">
+                      Create a new order or
+                      <a href="{% url 'dashboard' %}" style="color:var(--amber);">reset the search</a>.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       TREND CHART
+  ══════════════════════════════════════════════ -->
+  <section class="container analytics-panel reveal delay-2">
+    <div class="analytics-chart-card">
+      <h3>Orders Created — Last 7 Days</h3>
+      <div style="position:relative;height:180px;">
+        <canvas id="ordersTrendChart"></canvas>
+      </div>
+    </div>
+  </section>
+
 </main>
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const chartNode = document.getElementById("ordersTrendChart");
-        if (chartNode) {
-            new Chart(chartNode, {
-                type: "line",
-                data: {
-                    labels: {{ chart_labels|safe }},
-                    datasets: [{
-                        label: "Orders",
-                        data: {{ chart_values|safe }},
-                        tension: 0.35,
-                        fill: true,
-                        borderColor: "#0f5b84",
-                        backgroundColor: "rgba(15, 91, 132, 0.16)",
-                        pointRadius: 4,
-                        pointBackgroundColor: "#f28f2d"
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { precision: 0 }
-                        }
-                    }
-                }
-            });
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartNode = document.getElementById('ordersTrendChart');
+  if (chartNode) {
+    new Chart(chartNode, {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+          label: 'Orders',
+          data: {{ chart_values|safe }},
+          tension: 0.4,
+          fill: true,
+          borderColor: '#e8a020',
+          backgroundColor: 'rgba(232,160,32,0.08)',
+          pointRadius: 5,
+          pointBackgroundColor: '#e8a020',
+          pointBorderColor: '#0c0e12',
+          pointBorderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#171b26',
+            borderColor: 'rgba(232,160,32,0.3)',
+            borderWidth: 1,
+            titleColor: '#e8a020',
+            bodyColor: '#c8cdd8',
+            padding: 12,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#6b7591', font: { family: 'JetBrains Mono', size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { precision: 0, color: '#6b7591', font: { family: 'JetBrains Mono', size: 11 } }
+          }
         }
-    </script>
+      }
+    });
+  }
+</script>
 {% endblock %}

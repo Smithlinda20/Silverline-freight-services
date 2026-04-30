@@ -1,90 +1,234 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Services | SILVERLINE Freight Services{% endblock %}
+
 {% block content %}
 <main class="service-main">
-    <section class="service-hero">
-        <div class="container service-hero-grid">
-            <div class="reveal">
-                <p class="eyebrow">SILVERLINE Services</p>
-                <h1>Enterprise-grade freight execution from pickup to final delivery.</h1>
-                <p>
-                    We operate structured delivery pipelines across security, clearance, regulatory, and handling
-                    stages with transparent shipment updates at every checkpoint.
-                </p>
-                <div class="hero-actions">
-                    <a href="{% url 'home' %}#tracking" class="btn btn-primary">Track Shipment</a>
-                    <a href="{% url 'home' %}#terms-and-conditions" class="btn btn-outline">Policy and Charges</a>
-                </div>
-            </div>
-            <img class="reveal delay-1" src="{% static 'images/hero-cargo.svg' %}" alt="Freight service illustration" />
-        </div>
-    </section>
 
-    <section class="service-catalog">
-        <div class="container section-head reveal">
-            <p class="eyebrow">What We Offer</p>
-            <h2>Comprehensive logistics coverage</h2>
+  <!-- ══════════════════════════════════════════════
+       SERVICE HERO
+  ══════════════════════════════════════════════ -->
+  <section class="service-hero">
+    <div class="container service-hero-grid">
+      <div class="reveal">
+        <p class="eyebrow">SILVERLINE Services</p>
+        <h1>
+          Enterprise-Grade<br>
+          Freight Execution<br>
+          <em style="color:var(--amber);font-style:italic;">End to End.</em>
+        </h1>
+        <p>
+          We operate structured delivery pipelines across security, clearance, regulatory, and
+          handling stages — with transparent shipment updates and full documentation at every checkpoint.
+        </p>
+        <div class="hero-actions">
+          <a href="{% url 'home' %}#tracking" class="btn btn-primary">▸ Track Shipment</a>
+          <a href="{% url 'home' %}#terms-and-conditions" class="btn btn-outline">Policy &amp; Charges</a>
         </div>
-        <div class="container service-cards reveal delay-1">
-            <article>
-                <img src="{% static 'images/truck-route.svg' %}" alt="Ground freight icon" />
-                <h3>Ground Freight Delivery</h3>
-                <p>Regional and cross-border road freight with checkpoint logging and route-level visibility.</p>
-            </article>
-            <article>
-                <img src="{% static 'images/port-logistics.svg' %}" alt="Ocean freight icon" />
-                <h3>Ocean and Port Logistics</h3>
-                <p>Container movement support, customs monitoring, and controlled dispatch from port terminals.</p>
-            </article>
-            <article>
-                <img src="{% static 'images/warehouse-ops.svg' %}" alt="Warehouse icon" />
-                <h3>Warehousing and Fulfillment</h3>
-                <p>Inventory staging, secure storage, and order consolidation for reliable outbound execution.</p>
-            </article>
-            <article>
-                <img src="{% static 'images/truck-route.svg' %}" alt="Express shipping icon" />
-                <h3>Priority Express Handling</h3>
-                <p>Accelerated operational lanes for urgent shipments and time-sensitive deliveries.</p>
-            </article>
-        </div>
-    </section>
+      </div>
+      <div class="reveal delay-1">
+        <img src="{% static 'images/hero-cargo.svg' %}" alt="Freight service illustration"
+             onerror="this.style.opacity='0'" />
+      </div>
+    </div>
+  </section>
 
-    <section class="process-section">
-        <div class="container section-head reveal">
-            <p class="eyebrow">Operational Process</p>
-            <h2>How SILVERLINE moves every shipment</h2>
-        </div>
-        <div class="container process-grid reveal delay-1">
-            <article>
-                <span>01</span>
-                <h3>Order Creation</h3>
-                <p>Operations team creates an order and backend generates a unique tracking number.</p>
-            </article>
-            <article>
-                <span>02</span>
-                <h3>Transit Monitoring</h3>
-                <p>Logistics control updates location, status, and progress as shipment moves across hubs.</p>
-            </article>
-            <article>
-                <span>03</span>
-                <h3>Hold and Release</h3>
-                <p>When required charges apply, shipment is held and resumed immediately after confirmation.</p>
-            </article>
-            <article>
-                <span>04</span>
-                <h3>Completion and Proof</h3>
-                <p>Final updates and receipt issuance complete the order lifecycle with transparent records.</p>
-            </article>
-        </div>
-    </section>
+  <!-- ══════════════════════════════════════════════
+       SERVICE CATALOG
+  ══════════════════════════════════════════════ -->
+  <section class="service-catalog">
+    <div class="container section-head reveal">
+      <p class="eyebrow">What We Offer</p>
+      <h2>Comprehensive logistics coverage for every need</h2>
+    </div>
+    <div class="container service-cards reveal delay-1">
 
-    <section class="service-cta">
-        <div class="container reveal">
-            <h2>Need immediate shipment visibility?</h2>
-            <p>Use the tracking portal to check progress, location, status, and important notices instantly.</p>
-            <a href="{% url 'home' %}#tracking" class="btn btn-primary">Go To Tracking Portal</a>
+      <article>
+        <img src="{% static 'images/truck-route.svg' %}" alt="Ground freight"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.5rem;\'>🚛</div>'" />
+        <h3>Ground Freight Delivery</h3>
+        <p>
+          Regional and cross-border road freight with checkpoint logging, live route updates, and
+          route-level visibility. Ideal for bulk domestic shipments with scheduled delivery windows.
+        </p>
+        <ul style="margin-top:1rem;list-style:none;display:flex;flex-direction:column;gap:0.4rem;">
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Live GPS checkpoint updates
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Cross-border route handling
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Bulk freight optimization
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <img src="{% static 'images/port-logistics.svg' %}" alt="Ocean freight"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.5rem;\'>🚢</div>'" />
+        <h3>Ocean &amp; Port Logistics</h3>
+        <p>
+          Container movement support, customs monitoring, and controlled dispatch from port terminals.
+          Full documentation and regulatory compliance handling included at every stage.
+        </p>
+        <ul style="margin-top:1rem;list-style:none;display:flex;flex-direction:column;gap:0.4rem;">
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Customs clearance support
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Container tracking by ID
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Port-to-door coordination
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <img src="{% static 'images/warehouse-ops.svg' %}" alt="Warehousing"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.5rem;\'>🏭</div>'" />
+        <h3>Warehousing &amp; Fulfillment</h3>
+        <p>
+          Inventory staging, secure storage, and order consolidation for reliable outbound execution.
+          Purpose-built for e-commerce brands and high-frequency shippers.
+        </p>
+        <ul style="margin-top:1rem;list-style:none;display:flex;flex-direction:column;gap:0.4rem;">
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Secure bonded storage
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Pick, pack &amp; dispatch
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Inventory management
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <img src="{% static 'images/truck-route.svg' %}" alt="Express shipping"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.5rem;\'>⚡</div>'" />
+        <h3>Priority Express Handling</h3>
+        <p>
+          Accelerated operational lanes for urgent shipments and time-sensitive deliveries.
+          Dedicated handlers, priority clearance, and direct-to-recipient delivery pipelines.
+        </p>
+        <ul style="margin-top:1rem;list-style:none;display:flex;flex-direction:column;gap:0.4rem;">
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Same-day dispatch available
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Dedicated priority lane
+          </li>
+          <li style="font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--amber);font-size:0.65rem;">▸</span> Live agent monitoring
+          </li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       PROCESS
+  ══════════════════════════════════════════════ -->
+  <section class="process-section">
+    <div class="container section-head reveal">
+      <p class="eyebrow">Operational Process</p>
+      <h2>How SILVERLINE moves every shipment</h2>
+    </div>
+    <div class="container process-grid reveal delay-1">
+      <article>
+        <span>01</span>
+        <h3>Order Creation</h3>
+        <p>
+          Operations team creates an order and the backend system auto-generates a unique encrypted
+          tracking number assigned exclusively to your shipment.
+        </p>
+      </article>
+      <article>
+        <span>02</span>
+        <h3>Transit Monitoring</h3>
+        <p>
+          Our logistics control panel updates your shipment's location, route status, and live
+          progress percentage as it passes through each checkpoint hub.
+        </p>
+      </article>
+      <article>
+        <span>03</span>
+        <h3>Hold &amp; Release</h3>
+        <p>
+          When required charges or compliance checks apply, the shipment is temporarily held.
+          It is resumed immediately after confirmation and charge clearance.
+        </p>
+      </article>
+      <article>
+        <span>04</span>
+        <h3>Completion &amp; Proof</h3>
+        <p>
+          Final status updates and JPG receipt issuance complete the order lifecycle with full
+          transparent records — accessible throughout delivery.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       COVERAGE / TRUST BADGES
+  ══════════════════════════════════════════════ -->
+  <section style="padding:80px 0;background:var(--ink);">
+    <div class="container">
+      <div class="section-head reveal" style="text-align:center;max-width:560px;margin-left:auto;margin-right:auto;">
+        <p class="eyebrow" style="justify-content:center;">Coverage &amp; Standards</p>
+        <h2>Built on operational integrity</h2>
+      </div>
+      <div class="trust-badges reveal delay-1">
+        <div class="trust-badge">
+          <div class="trust-badge-icon">📦</div>
+          <h4>4,800+</h4>
+          <p>Shipments delivered</p>
         </div>
-    </section>
+        <div class="trust-badge">
+          <div class="trust-badge-icon">🛡️</div>
+          <h4>Fully Insured</h4>
+          <p>All cargo is covered end-to-end</p>
+        </div>
+        <div class="trust-badge">
+          <div class="trust-badge-icon">🌐</div>
+          <h4>90+ Routes</h4>
+          <p>Domestic &amp; international lanes</p>
+        </div>
+        <div class="trust-badge">
+          <div class="trust-badge-icon">📋</div>
+          <h4>Compliance-First</h4>
+          <p>Regulatory procedures at every stage</p>
+        </div>
+        <div class="trust-badge">
+          <div class="trust-badge-icon">⏱</div>
+          <h4>98% On-Time</h4>
+          <p>Delivery rate across all routes</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       CTA
+  ══════════════════════════════════════════════ -->
+  <section class="service-cta">
+    <div class="container reveal">
+      <h2>Need Immediate Shipment Visibility?</h2>
+      <p>
+        Use the tracking portal to check your shipment's live progress, current location, route plan,
+        status, and any important notices — instantly, no login required.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="{% url 'home' %}#tracking" class="btn btn-primary">▸ Go To Tracking Portal</a>
+        <a href="#contact" class="btn btn-outline">Contact Logistics Desk</a>
+      </div>
+    </div>
+  </section>
+
 </main>
 {% endblock %}

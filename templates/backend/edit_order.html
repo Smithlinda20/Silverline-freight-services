@@ -1,34 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Edit Order | SILVERLINE Freight Services{% endblock %}
+
 {% block content %}
 <main class="dashboard-main">
-    <section class="container edit-order-card reveal">
-        <div class="edit-order-head">
-            <div>
-                <p class="eyebrow">Order Editor</p>
-                <h1>Edit Shipment {{ order.tracking_number }}</h1>
-            </div>
-            <div class="edit-head-actions">
-                <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-secondary">Download Receipt JPG</a>
-                <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
-            </div>
-        </div>
+  <section class="container edit-order-card reveal">
 
-        <form method="post" class="stack-form">
-            {% csrf_token %}
-            <div class="edit-order-grid">
-                {% for field in form %}
-                    <div class="field-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <small class="form-error">{{ field.errors|striptags }}</small>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-            <button type="submit" class="btn btn-primary">Save Order Changes</button>
-        </form>
-    </section>
+    <!-- ══ HEADER ══ -->
+    <div class="edit-order-head">
+      <div>
+        <p class="eyebrow">Order Editor</p>
+        <h1>Edit Shipment</h1>
+        <p style="font-family:var(--font-mono);font-size:0.82rem;color:var(--amber);
+                  letter-spacing:0.06em;margin-top:4px;">
+          {{ order.tracking_number }}
+        </p>
+      </div>
+      <div class="edit-head-actions">
+        <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-secondary">
+          ⬇ Download Receipt JPG
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline">
+          ← Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- ══ STATUS STRIP ══ -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
+      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
+                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
+                     text-transform:uppercase;letter-spacing:0.1em;">Current Status</span>
+        <span class="status-pill {{ order.status }}" style="margin-top:4px;">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
+                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
+                     text-transform:uppercase;letter-spacing:0.1em;">Progress</span>
+        <span style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;
+                     color:var(--amber);line-height:1;margin-top:2px;">
+          {{ order.progress_percent }}%
+        </span>
+      </div>
+      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
+                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
+                     text-transform:uppercase;letter-spacing:0.1em;">Hold Active</span>
+        <span style="font-family:var(--font-display);font-size:1rem;font-weight:700;
+                     margin-top:4px;color:{% if order.hold_active %}var(--danger){% else %}var(--success){% endif %};">
+          {% if order.hold_active %}Yes — ${{ order.hold_amount|default:"—" }}{% else %}No{% endif %}
+        </span>
+      </div>
+      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
+                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
+                     text-transform:uppercase;letter-spacing:0.1em;">Created</span>
+        <span style="font-size:0.88rem;color:var(--off-white);margin-top:4px;">
+          {{ order.created_at|date:"Y-m-d H:i" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ══ EDIT FORM ══ -->
+    <form method="post" class="stack-form">
+      {% csrf_token %}
+
+      <div class="edit-order-grid">
+        {% for field in form %}
+          <div class="field-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <small class="form-error">{{ field.errors|striptags }}</small>
+            {% endif %}
+            {% if field.help_text %}
+              <small style="font-size:0.75rem;color:var(--muted);margin-top:2px;">
+                {{ field.help_text }}
+              </small>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;">
+        <button type="submit" class="btn btn-primary">
+          ✓ Save Order Changes
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn btn-ghost">
+          Cancel
+        </a>
+      </div>
+    </form>
+
+  </section>
 </main>
 {% endblock %}

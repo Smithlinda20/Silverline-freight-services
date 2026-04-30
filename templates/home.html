@@ -1,279 +1,443 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}SILVERLINE Freight Services | Track Shipment{% endblock %}
+
 {% block content %}
 <main>
-    <section class="hero hero-v2">
-        <div class="container hero-grid">
-            <div class="hero-copy reveal">
-                <p class="eyebrow">SILVERLINE FREIGHT NETWORK</p>
-                <h1>Precision Freight Delivery Across Domestic and International Routes.</h1>
-                <p>
-                    SILVERLINE gives clients real-time shipment visibility while operations teams manage routing,
-                    progress, holds, and releases from one unified backend dashboard.
-                </p>
-                <div class="hero-actions">
-                    <a href="#tracking" class="btn btn-primary">Track A Shipment</a>
-                    <a href="{% url 'services' %}" class="btn btn-outline">Explore Services</a>
-                </div>
-                <div class="hero-metrics">
-                    <article>
-                        <span>Live</span>
-                        <strong>Progress Updates</strong>
-                    </article>
-                    <article>
-                        <span>Admin</span>
-                        <strong>Order Controls</strong>
-                    </article>
-                    <article>
-                        <span>Fast</span>
-                        <strong>JPG Receipts</strong>
-                    </article>
-                </div>
-            </div>
 
-            <div class="hero-visual reveal delay-1">
-                <img src="{% static 'images/hero-cargo.svg' %}" alt="Cargo shipment operation illustration" />
-                <div class="hero-panel">
-                    <h3>Operational Highlights</h3>
-                    <ul>
-                        <li>Backend-generated tracking numbers</li>
-                        <li>Live shipment progress from 0% to 100%</li>
-                        <li>Hold/release workflow with charge transparency</li>
-                    </ul>
-                </div>
-            </div>
+  <!-- ══════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════ -->
+  <section class="hero hero-v2">
+    <div class="container hero-grid">
+
+      <!-- Left: copy -->
+      <div class="hero-copy reveal">
+        <p class="eyebrow">SILVERLINE FREIGHT NETWORK</p>
+        <h1>
+          Precision Freight<br>
+          Delivery Across<br>
+          <em>Every Route.</em>
+        </h1>
+        <p>
+          SILVERLINE gives clients real-time shipment visibility while operations teams
+          manage routing, progress, holds, and releases from one unified backend dashboard.
+        </p>
+        <div class="hero-actions">
+          <a href="#tracking" class="btn btn-primary">▸ Track A Shipment</a>
+          <a href="{% url 'services' %}" class="btn btn-outline">Explore Services</a>
         </div>
-    </section>
+        <div class="hero-metrics">
+          <article>
+            <span>Live</span>
+            <strong>Progress Updates</strong>
+          </article>
+          <article>
+            <span>Admin</span>
+            <strong>Order Controls</strong>
+          </article>
+          <article>
+            <span>Fast</span>
+            <strong>Receipt Issuance</strong>
+          </article>
+        </div>
+      </div>
 
-    <section id="tracking" class="tracking-section">
-        <div class="container">
-            <div class="section-head reveal">
-                <p class="eyebrow">Client Tracking Portal</p>
-                <h2>Track your shipment with a tracking number</h2>
-            </div>
-            <form method="get" class="track-form reveal delay-1">
-                {{ track_form.tracking_number }}
-                <button type="submit" class="btn btn-primary">Track Now</button>
-            </form>
+      <!-- Right: visual -->
+      <div class="hero-visual reveal delay-1">
+        <img src="{% static 'images/hero-cargo.svg' %}"
+             alt="Cargo shipment operation illustration"
+             onerror="this.style.display='none'" />
+        <div class="hero-panel">
+          <h3>Operational Highlights</h3>
+          <ul>
+            <li>Backend-generated unique tracking numbers</li>
+            <li>Live shipment progress from 0% to 100%</li>
+            <li>Hold/release workflow with charge transparency</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-            {% if lookup_attempted %}
-                <div class="tracking-card reveal delay-2">
-                    {% if order %}
-                        <div class="tracking-report">
-                            <div class="tracking-report-head">
-                                <div>
-                                    <p class="label">Tracking Number</p>
-                                    <h3>{{ order.tracking_number }}</h3>
-                                </div>
-                                <div>
-                                    <p class="label">Current Status</p>
-                                    <p class="status-pill {{ order.status }}">{{ order.get_status_display }}</p>
-                                </div>
-                            </div>
+  <!-- ══════════════════════════════════════════════
+       LIVE STATS BAR
+  ══════════════════════════════════════════════ -->
+  <div class="stats-bar">
+    <div class="container stats-bar-inner">
+      <div class="stat-bar-item">
+        <span class="stat-bar-val" data-count="4800">0</span><span>+</span>
+        <p>Shipments Delivered</p>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <span class="stat-bar-val" data-count="98">0</span><span>%</span>
+        <p>On-Time Delivery Rate</p>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <span class="stat-bar-val" data-count="90">0</span><span>+</span>
+        <p>Active Routes</p>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <span class="stat-bar-val">24/7</span>
+        <p>Logistics Support</p>
+      </div>
+    </div>
+  </div>
 
-                            <div class="progress-block">
-                                <div class="progress-head">
-                                    <h4>Live Delivery Progress</h4>
-                                    <span>{{ order.progress_percent }}%</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-fill" style="width: {{ order.progress_percent }}%;"></div>
-                                </div>
-                            </div>
+  <!-- ══════════════════════════════════════════════
+       TRACKING SECTION
+  ══════════════════════════════════════════════ -->
+  <section id="tracking" class="tracking-section">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Client Tracking Portal</p>
+        <h2>Track Your Shipment Instantly</h2>
+        <p style="color:var(--muted);font-size:0.95rem;margin-top:0.5rem;max-width:500px;">
+          Enter your unique tracking number to get real-time status, location, progress, and any important notices about your shipment.
+        </p>
+      </div>
 
-                            <div class="tracking-table-wrap">
-                                <table class="tracking-table">
-                                    <tbody>
-                                        <tr>
-                                            <th>Sender Name</th>
-                                            <td>{{ order.sender_name|default:"-" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Receiver Name</th>
-                                            <td>{{ order.receiver_name|default:"-" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>From Address</th>
-                                            <td>{{ order.from_address }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>To Address</th>
-                                            <td>{{ order.to_address }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Current Location</th>
-                                            <td>{{ order.current_location|default:"In route processing center" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Shipment Item</th>
-                                            <td>{{ order.item_name }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Quantity</th>
-                                            <td>{{ order.item_quantity }}</td>
-                                        </tr>
-                                        {% if order.item_weight_kg %}
-                                            <tr>
-                                                <th>Weight</th>
-                                                <td>{{ order.item_weight_kg }} kg</td>
-                                            </tr>
-                                        {% endif %}
-                                        {% if order.item_description %}
-                                            <tr>
-                                                <th>Item Description</th>
-                                                <td>{{ order.item_description }}</td>
-                                            </tr>
-                                        {% endif %}
-                                        {% if order.expected_delivery_date %}
-                                            <tr>
-                                                <th>Estimated Delivery</th>
-                                                <td>{{ order.expected_delivery_date }}</td>
-                                            </tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
+      <form method="get" class="track-form reveal delay-1">
+        {{ track_form.tracking_number }}
+        <button type="submit" class="btn btn-primary">Track Now ▸</button>
+      </form>
 
-                            {% with route_points=order.get_route_points %}
-                                {% if route_points %}
-                                    <div class="route-map">
-                                        <h4>Shipment Route Plan</h4>
-                                        <div class="route-stops">
-                                            {% for stop in route_points %}
-                                                <span class="route-stop {% if forloop.counter0 < order.current_waypoint_index %}passed{% elif forloop.counter0 == order.current_waypoint_index %}current{% else %}pending{% endif %}">
-                                                    {{ stop }}
-                                                </span>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
+      {% if lookup_attempted %}
+        <div class="tracking-card reveal delay-2">
+          {% if order %}
+            <div class="tracking-report">
 
-                        {% if order.hold_active %}
-                            <div class="hold-banner">
-                                <h4>Shipment Alert</h4>
-                                <p>{{ order.hold_message }}</p>
-                                {% if order.hold_amount %}
-                                    <p class="hold-amount">Hold Charge: ${{ order.hold_amount }}</p>
-                                {% endif %}
-                            </div>
-                        {% endif %}
+              <!-- Head: tracking number + status -->
+              <div class="tracking-report-head">
+                <div>
+                  <p class="label">Tracking Number</p>
+                  <h3>{{ order.tracking_number }}</h3>
+                </div>
+                <div>
+                  <p class="label">Current Status</p>
+                  <p class="status-pill {{ order.status }}">{{ order.get_status_display }}</p>
+                </div>
+              </div>
 
-                        <div class="terms-short-note">
-                            <p><strong>Important Notice:</strong></p>
-                            {% if order.client_notice_option == "order_charges" %}
-                                <p><strong>Order Charges</strong></p>
-                                <p>Certain charges may apply to all orders:</p>
-                                <p><strong>Additional Processing Charges (mandatory)</strong></p>
-                                <p>These charges are required before your order can be processed:</p>
-                                <ul>
-                                    <li>Last Mile Delivery</li>
-                                    <li>Delivery Confirmation</li>
-                                    <li>Final Inspection</li>
-                                    <li>Immediate Delivery Queue Fee</li>
-                                    <li>End-of-Line Processing</li>
-                                </ul>
-                                <p><strong>Optional Charge</strong></p>
-                                <p>This charge is optional and applied only if selected:</p>
-                                <ul>
-                                    <li>Signature Collection</li>
-                                </ul>
-                                <p>
-                                    <strong>Note:</strong> All applicable fees are refundable where eligible. Orders
-                                    cannot be processed until all required processing charges are completed.
-                                </p>
-                            {% else %}
-                                <p>
-                                    Please click on the Terms and Conditions below to review and understand our company
-                                    policies and procedures for effective service delivery.
-                                </p>
-                            {% endif %}
-                            <a href="#terms-and-conditions" class="terms-tag">#terms-and-conditions</a>
-                        </div>
-                    {% else %}
-                        <h3>No shipment found</h3>
-                        <p>
-                            Tracking number <strong>{{ tracking_number }}</strong> is not in our system yet. Please
-                            verify and try again.
-                        </p>
+              <!-- Progress bar -->
+              <div class="progress-block">
+                <div class="progress-head">
+                  <h4>Live Delivery Progress</h4>
+                  <span>{{ order.progress_percent }}%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: {{ order.progress_percent }}%;"></div>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin-top:0.75rem;font-family:var(--font-mono);">
+                  {% if order.progress_percent == 100 %}
+                    ✔ Shipment complete
+                  {% elif order.progress_percent >= 75 %}
+                    ▸ Final delivery stage
+                  {% elif order.progress_percent >= 50 %}
+                    ▸ In transit — midway
+                  {% elif order.progress_percent >= 25 %}
+                    ▸ Departed origin hub
+                  {% else %}
+                    ▸ Order received — processing
+                  {% endif %}
+                </p>
+              </div>
+
+              <!-- Details table -->
+              <div class="tracking-table-wrap">
+                <table class="tracking-table">
+                  <tbody>
+                    <tr>
+                      <th>Sender Name</th>
+                      <td>{{ order.sender_name|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Receiver Name</th>
+                      <td>{{ order.receiver_name|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                      <th>From Address</th>
+                      <td>{{ order.from_address }}</td>
+                    </tr>
+                    <tr>
+                      <th>To Address</th>
+                      <td>{{ order.to_address }}</td>
+                    </tr>
+                    <tr>
+                      <th>Current Location</th>
+                      <td>{{ order.current_location|default:"In route processing center" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Shipment Item</th>
+                      <td>{{ order.item_name }}</td>
+                    </tr>
+                    <tr>
+                      <th>Quantity</th>
+                      <td>{{ order.item_quantity }}</td>
+                    </tr>
+                    {% if order.item_weight_kg %}
+                      <tr>
+                        <th>Weight</th>
+                        <td>{{ order.item_weight_kg }} kg</td>
+                      </tr>
                     {% endif %}
-                </div>
+                    {% if order.item_description %}
+                      <tr>
+                        <th>Item Description</th>
+                        <td>{{ order.item_description }}</td>
+                      </tr>
+                    {% endif %}
+                    {% if order.expected_delivery_date %}
+                      <tr>
+                        <th>Estimated Delivery</th>
+                        <td>{{ order.expected_delivery_date }}</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Route map -->
+              {% with route_points=order.get_route_points %}
+                {% if route_points %}
+                  <div class="route-map">
+                    <h4>Shipment Route Plan</h4>
+                    <div class="route-stops">
+                      {% for stop in route_points %}
+                        <span class="route-stop
+                          {% if forloop.counter0 < order.current_waypoint_index %}passed
+                          {% elif forloop.counter0 == order.current_waypoint_index %}current
+                          {% else %}pending{% endif %}">
+                          {{ stop }}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+              {% endwith %}
+
+            </div>{# /tracking-report #}
+
+            <!-- Hold banner -->
+            {% if order.hold_active %}
+              <div class="hold-banner">
+                <h4>⚠ Shipment On Hold</h4>
+                <p>{{ order.hold_message }}</p>
+                {% if order.hold_amount %}
+                  <p class="hold-amount">Hold Charge: ${{ order.hold_amount }}</p>
+                {% endif %}
+                <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--muted);">
+                  Please contact our logistics desk at <strong style="color:var(--white);">+1 (559) 889-6546</strong> to resolve this hold.
+                </p>
+              </div>
             {% endif %}
-        </div>
-    </section>
 
-    <section id="services" class="services">
-        <div class="container section-head reveal">
-            <p class="eyebrow">Service Lines</p>
-            <h2>Shipping services built for speed and control</h2>
-        </div>
-
-        <div class="container cards reveal delay-1">
-            <article>
-                <img src="{% static 'images/truck-route.svg' %}" alt="Trucking and inland freight illustration" />
-                <h3>Freight Dispatch</h3>
-                <p>Cross-region freight planning with tightly monitored transit checkpoints.</p>
-            </article>
-            <article>
-                <img src="{% static 'images/port-logistics.svg' %}" alt="Port and ocean logistics illustration" />
-                <h3>Commercial Logistics</h3>
-                <p>Scalable support for high-volume business shipping with SLA-backed movement.</p>
-            </article>
-            <article>
-                <img src="{% static 'images/warehouse-ops.svg' %}" alt="Warehouse operations illustration" />
-                <h3>Express Handling</h3>
-                <p>Priority handling lanes for urgent shipments requiring accelerated delivery.</p>
-            </article>
-        </div>
-
-        <div class="container services-cta reveal delay-2">
-            <a href="{% url 'services' %}" class="btn btn-primary">View Full Services</a>
-        </div>
-    </section>
-
-    <section id="terms-and-conditions" class="terms-section">
-        <div class="container reveal">
-            <p class="eyebrow">Terms and Conditions</p>
-            <h2>Important Notice Regarding Delivery Charges</h2>
-
-            <div class="terms-card">
+            <!-- Client notice -->
+            <div class="terms-short-note">
+              <p><strong>Important Notice:</strong></p>
+              {% if order.client_notice_option == "order_charges" %}
+                <p><strong>Order Charges</strong></p>
+                <p>Certain charges may apply to all orders:</p>
+                <p><strong>Additional Processing Charges (mandatory)</strong></p>
+                <p>These charges are required before your order can be processed:</p>
+                <ul>
+                  <li>Last Mile Delivery</li>
+                  <li>Delivery Confirmation</li>
+                  <li>Final Inspection</li>
+                  <li>Immediate Delivery Queue Fee</li>
+                  <li>End-of-Line Processing</li>
+                </ul>
+                <p><strong>Optional Charge</strong></p>
+                <p>This charge is optional and applied only if selected:</p>
+                <ul>
+                  <li>Signature Collection</li>
+                </ul>
                 <p>
-                    Please be informed that certain processing charges are applicable during the shipment and delivery
-                    of your package. These charges include:
+                  <strong>Note:</strong> All applicable fees are refundable where eligible.
+                  Orders cannot be processed until all required processing charges are completed.
                 </p>
-                <ol>
-                    <li>Security and Safety Fee - $150 (Refundable)</li>
-                    <li>Clearance Procedures Fee - $210 (Refundable)</li>
-                    <li>Regulatory Agency Processing Fee - $320 (Refundable)</li>
-                    <li>End-of-Line Processing Fee - $500 (Refundable)</li>
-                    <li>Final Inspection Fee - $600 (Refundable)</li>
-                    <li>Final Handling Fee - $700</li>
-                </ol>
+              {% else %}
                 <p>
-                    These fees are temporary security deposits required to ensure that all regulatory, safety, and
-                    compliance procedures are properly completed throughout the delivery process.
+                  Please click on the Terms and Conditions below to review and understand our company
+                  policies and procedures for effective service delivery.
                 </p>
-                <p>
-                    Upon successful delivery of the package, all refundable charges will be returned in full directly
-                    to the recipient by the courier at the point of delivery.
-                </p>
-                <p>
-                    Please note that delivery cannot be completed unless all required procedures and associated charges
-                    are fully settled.
-                </p>
-                <p>
-                    For assistance, contact our delivery agents:
-                    <strong>+1 (559) 889-6546</strong> and <strong>+1 (602) 654-5189</strong>.
-                </p>
+              {% endif %}
+              <a href="#terms-and-conditions" class="terms-tag">#terms-and-conditions</a>
             </div>
 
-            <p class="terms-thanks">
-                Thank you for choosing SILVERLINE Freight Services. We appreciate your trust and remain committed to
-                reliable delivery.
-            </p>
+          {% else %}
+            <!-- Not found state -->
+            <div style="padding:3rem 2.5rem;text-align:center;">
+              <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+              <h3 style="padding:0;color:var(--danger);font-family:var(--font-display);font-size:1.8rem;text-transform:uppercase;margin-bottom:0.75rem;">
+                No Shipment Found
+              </h3>
+              <p style="padding:0;color:var(--off-white);font-size:0.92rem;max-width:420px;margin:0 auto 2rem;">
+                Tracking number <strong style="color:var(--amber);">{{ tracking_number }}</strong> is not in our system yet.
+                Please verify and try again, or contact our support team.
+              </p>
+              <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                <a href="#tracking" class="btn btn-outline">Try Again</a>
+                <a href="#contact" class="btn btn-ghost">Contact Support</a>
+              </div>
+            </div>
+          {% endif %}
+        </div>{# /tracking-card #}
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       HOW IT WORKS
+  ══════════════════════════════════════════════ -->
+  <section class="how-section">
+    <div class="container">
+      <div class="section-head reveal" style="text-align:center;max-width:600px;margin-left:auto;margin-right:auto;">
+        <p class="eyebrow" style="justify-content:center;">How It Works</p>
+        <h2>From dispatch to delivery — fully tracked</h2>
+      </div>
+      <div class="process-grid reveal delay-1">
+        <article>
+          <span>01</span>
+          <h3>Order Creation</h3>
+          <p>Our operations team creates your shipment order and the backend generates a unique, encrypted tracking number.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Transit Monitoring</h3>
+          <p>Logistics control updates your shipment's location, status, and progress percentage as it moves across hubs.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>Hold &amp; Release</h3>
+          <p>When applicable charges arise, the shipment is briefly held and resumed immediately after confirmation and clearance.</p>
+        </article>
+        <article>
+          <span>04</span>
+          <h3>Delivery &amp; Proof</h3>
+          <p>Final status updates and receipt issuance complete the order lifecycle with full transparent documentation.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SERVICES PREVIEW
+  ══════════════════════════════════════════════ -->
+  <section id="services" class="services">
+    <div class="container section-head reveal">
+      <p class="eyebrow">Service Lines</p>
+      <h2>Shipping services built for speed and control</h2>
+    </div>
+
+    <div class="container cards reveal delay-1">
+      <article>
+        <img src="{% static 'images/truck-route.svg' %}" alt="Freight dispatch"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.25rem;\'>🚛</div>'" />
+        <h3>Freight Dispatch</h3>
+        <p>Cross-region freight planning with tightly monitored transit checkpoints and real-time status visibility.</p>
+      </article>
+      <article>
+        <img src="{% static 'images/port-logistics.svg' %}" alt="Commercial logistics"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.25rem;\'>🚢</div>'" />
+        <h3>Commercial Logistics</h3>
+        <p>Scalable support for high-volume business shipping with SLA-backed movement and dedicated account handling.</p>
+      </article>
+      <article>
+        <img src="{% static 'images/warehouse-ops.svg' %}" alt="Express handling"
+             onerror="this.outerHTML='<div style=\'font-size:2.5rem;margin-bottom:1.25rem;\'>⚡</div>'" />
+        <h3>Express Handling</h3>
+        <p>Priority handling lanes for urgent shipments requiring accelerated processing and next-hub delivery.</p>
+      </article>
+    </div>
+
+    <div class="container services-cta reveal delay-2">
+      <a href="{% url 'services' %}" class="btn btn-primary">View Full Services →</a>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       WHY SILVERLINE
+  ══════════════════════════════════════════════ -->
+  <section class="why-section">
+    <div class="container">
+      <div class="section-head reveal" style="text-align:center;max-width:600px;margin-left:auto;margin-right:auto;">
+        <p class="eyebrow" style="justify-content:center;">Why SILVERLINE</p>
+        <h2>The freight network built for trust</h2>
+      </div>
+      <div class="why-grid reveal delay-1">
+        <div class="why-item">
+          <div class="why-icon">🔒</div>
+          <h4>Compliance-First Operations</h4>
+          <p>Every shipment follows strict regulatory procedures. All charges are disclosed upfront — no surprises at delivery.</p>
         </div>
-    </section>
+        <div class="why-item">
+          <div class="why-icon">📡</div>
+          <h4>Live Tracking Dashboard</h4>
+          <p>Clients get full visibility — from pickup to final delivery — with a live percentage progress bar and route map.</p>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">📋</div>
+          <h4>Documented at Every Step</h4>
+          <p>Receipts, hold notices, and status changes are logged and available at every checkpoint throughout transit.</p>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">📞</div>
+          <h4>24/7 Logistics Desk</h4>
+          <p>Our logistics team is available around the clock to assist with any tracking queries, holds, or clearance questions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       TERMS & CONDITIONS
+  ══════════════════════════════════════════════ -->
+  <section id="terms-and-conditions" class="terms-section">
+    <div class="container reveal">
+      <p class="eyebrow">Terms and Conditions</p>
+      <h2>Important Notice Regarding Delivery Charges</h2>
+
+      <div class="terms-card">
+        <p>
+          Please be informed that certain processing charges are applicable during the shipment and delivery
+          of your package. These charges include:
+        </p>
+        <ol>
+          <li><strong>Security and Safety Fee</strong> — $150 (Refundable)</li>
+          <li><strong>Clearance Procedures Fee</strong> — $210 (Refundable)</li>
+          <li><strong>Regulatory Agency Processing Fee</strong> — $320 (Refundable)</li>
+          <li><strong>End-of-Line Processing Fee</strong> — $500 (Refundable)</li>
+          <li><strong>Final Inspection Fee</strong> — $600 (Refundable)</li>
+          <li><strong>Final Handling Fee</strong> — $700</li>
+        </ol>
+        <p>
+          These fees are temporary security deposits required to ensure that all regulatory, safety, and
+          compliance procedures are properly completed throughout the delivery process.
+        </p>
+        <p>
+          Upon successful delivery of the package, all refundable charges will be returned in full directly
+          to the recipient by the courier at the point of delivery.
+        </p>
+        <p>
+          Please note that delivery cannot be completed unless all required procedures and associated charges
+          are fully settled.
+        </p>
+        <p>
+          For assistance, contact our delivery agents:
+          <strong>+1 (559) 889-6546</strong> and <strong>+1 (602) 654-5189</strong>.
+        </p>
+      </div>
+
+      <p class="terms-thanks">
+        Thank you for choosing SILVERLINE Freight Services. We appreciate your trust and remain committed to
+        reliable, transparent delivery.
+      </p>
+    </div>
+  </section>
+
 </main>
 {% endblock %}
