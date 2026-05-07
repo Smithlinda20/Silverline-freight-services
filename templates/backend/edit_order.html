@@ -26,17 +26,15 @@
     </div>
 
     <!-- ══ STATUS STRIP ══ -->
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
-      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
-                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+    <div class="edit-status-strip">
+      <div class="edit-status-card">
         <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
                      text-transform:uppercase;letter-spacing:0.1em;">Current Status</span>
         <span class="status-pill {{ order.status }}" style="margin-top:4px;">
           {{ order.get_status_display }}
         </span>
       </div>
-      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
-                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+      <div class="edit-status-card">
         <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
                      text-transform:uppercase;letter-spacing:0.1em;">Progress</span>
         <span style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;
@@ -44,8 +42,7 @@
           {{ order.progress_percent }}%
         </span>
       </div>
-      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
-                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+      <div class="edit-status-card">
         <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
                      text-transform:uppercase;letter-spacing:0.1em;">Hold Active</span>
         <span style="font-family:var(--font-display);font-size:1rem;font-weight:700;
@@ -53,8 +50,7 @@
           {% if order.hold_active %}Yes — ${{ order.hold_amount|default:"—" }}{% else %}No{% endif %}
         </span>
       </div>
-      <div style="background:var(--ink-card);border:var(--border);border-radius:var(--radius);
-                  padding:0.75rem 1.25rem;display:flex;flex-direction:column;gap:2px;">
+      <div class="edit-status-card">
         <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);
                      text-transform:uppercase;letter-spacing:0.1em;">Created</span>
         <span style="font-size:0.88rem;color:var(--off-white);margin-top:4px;">

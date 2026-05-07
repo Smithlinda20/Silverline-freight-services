@@ -327,6 +327,14 @@ nav a.nav-cta:hover {
 /* ============================================================
    HERO (HOME)
    ============================================================ */
+.home-main {
+  background: linear-gradient(180deg, #223450 0%, #1d2e47 36%, #223551 68%, #263d5d 100%);
+}
+
+.home-hero {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+}
+
 .hero {
   position: relative;
   min-height: 100vh;
@@ -532,6 +540,10 @@ nav a.nav-cta:hover {
   padding: 100px 0;
   background: var(--ink-mid);
   position: relative;
+}
+
+.home-tracking {
+  background: linear-gradient(180deg, #2a3d5c 0%, #2c4060 100%);
 }
 
 .tracking-section::before {
@@ -890,6 +902,10 @@ nav a.nav-cta:hover {
   position: relative;
 }
 
+.home-services {
+  background: linear-gradient(180deg, #2b3f5f 0%, #2f4567 100%);
+}
+
 .services::before {
   content: '';
   position: absolute;
@@ -971,6 +987,10 @@ nav a.nav-cta:hover {
   padding: 100px 0;
   background: var(--ink-mid);
   position: relative;
+}
+
+.home-terms {
+  background: linear-gradient(180deg, #2c4160 0%, #314969 100%);
 }
 
 .terms-section::before {
@@ -1402,6 +1422,10 @@ nav a.nav-cta:hover {
   position: relative;
 }
 
+.home-how {
+  background: linear-gradient(180deg, #314969 0%, #375073 100%);
+}
+
 .how-section::before {
   content: '';
   position: absolute;
@@ -1417,6 +1441,10 @@ nav a.nav-cta:hover {
   padding: 100px 0;
   background: var(--ink-mid);
   position: relative;
+}
+
+.home-why {
+  background: linear-gradient(180deg, #2f4567 0%, #2a3f5f 100%);
 }
 
 .why-section::before {
@@ -1844,6 +1872,10 @@ nav a.active {
   margin-bottom: 1.5rem;
 }
 
+.order-history-panel {
+  margin-bottom: 1.5rem;
+}
+
 .dashboard-search-form {
   display: flex;
   gap: 0.75rem;
@@ -2074,6 +2106,23 @@ td[colspan] {
    ============================================================ */
 .edit-order-card {
   padding: 3rem 0 80px;
+}
+
+.edit-status-strip {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.edit-status-card {
+  background: rgba(255,255,255,0.08);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .edit-order-head {

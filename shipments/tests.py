@@ -106,6 +106,7 @@ class BackendAuthTests(TestCase):
         self.assertTrue(logged_in)
         response = self.client.get(reverse("dashboard"))
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Order History")
         self.assertIn("chart_labels", response.context)
         self.assertIn("chart_values", response.context)
 

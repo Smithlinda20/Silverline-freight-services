@@ -52,6 +52,46 @@
   <!-- ══════════════════════════════════════════════
        SEARCH / FILTER TOOLBAR
   ══════════════════════════════════════════════ -->
+  <section class="container order-history-panel reveal delay-1">
+    <article class="card wide">
+      <h2>
+        Order History
+        <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
+                     color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
+          all created orders
+        </span>
+      </h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Created</th>
+              <th>Route</th>
+              <th>Status</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in all_orders %}
+            <tr>
+              <td><strong>{{ order.tracking_number }}</strong></td>
+              <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+              <td>{{ order.from_address|truncatechars:30 }} -> {{ order.to_address|truncatechars:30 }}</td>
+              <td><span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span></td>
+              <td>{{ order.progress_percent }}%</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">No shipment orders created yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
   <section class="container dashboard-toolbar reveal delay-1">
     <form method="get" class="dashboard-search-form">
       <input
