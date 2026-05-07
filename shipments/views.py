@@ -329,13 +329,15 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     status_filter = request.GET.get("status", "").strip()
     _apply_automatic_updates(ShipmentOrder.objects.filter(auto_update_enabled=True))
     base_orders = ShipmentOrder.objects.all()
-    orders = base_orders
+    filtered_orders = base_orders
     if search_query:
-        orders = orders.filter(tracking_number__icontains=search_query)
-        if not orders.exists():
+        filtered_orders = filtered_orders.filter(tracking_number__icontains=search_query)
+        if not filtered_orders.exists():
             messages.info(request, f"No order found with tracking number matching '{search_query}'.")
     if status_filter:
-        orders = orders.filter(status=status_filter)
+        filtered_orders = filtered_orders.filter(status=status_filter)
+
+    filters_applied = bool(search_query or status_filter)
 
     create_form = ShipmentOrderCreateForm()
     hold_form = ShipmentHoldForm()
@@ -359,7 +361,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "create_form": create_form,
         "hold_form": hold_form,
         "status_form": status_form,
-        "orders": orders,
+        "all_orders": base_orders,
+        "filtered_orders": filtered_orders if filters_applied else base_orders.none(),
+        "filters_applied": filters_applied,
         "search_query": search_query,
         "status_filter": status_filter,
         "total_orders": base_orders.count(),

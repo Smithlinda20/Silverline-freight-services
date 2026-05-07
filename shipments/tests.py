@@ -83,7 +83,7 @@ class TrackingViewTests(TestCase):
     def test_terms_section_is_available_on_homepage(self):
         response = self.client.get(reverse("home"))
         self.assertContains(response, "Terms and Conditions")
-        self.assertContains(response, "Silverline Freight Delivery Services")
+        self.assertContains(response, "SILVERLINE Freight Services")
 
 
 class BackendAuthTests(TestCase):
@@ -121,9 +121,20 @@ class BackendAuthTests(TestCase):
 
     def test_dashboard_search_filters_by_tracking_number(self):
         self.client.login(username=self.user.username, password="TestPass123!")
+        other_order = ShipmentOrder.objects.create(
+            from_address="Kano",
+            to_address="Kaduna",
+            item_name="Tablets",
+        )
         response = self.client.get(reverse("dashboard"), {"tracking": self.order.tracking_number})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.order.tracking_number)
+        self.assertContains(response, "Filtered Results")
+        self.assertTrue(response.context["filters_applied"])
+        filtered_orders = list(response.context["filtered_orders"])
+        self.assertEqual(len(filtered_orders), 1)
+        self.assertEqual(filtered_orders[0].id, self.order.id)
+        self.assertNotEqual(filtered_orders[0].id, other_order.id)
 
     def test_edit_order_updates_item_name(self):
         self.client.login(username=self.user.username, password="TestPass123!")

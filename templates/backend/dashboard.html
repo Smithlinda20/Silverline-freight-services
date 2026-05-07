@@ -74,6 +74,53 @@
     </form>
   </section>
 
+  {% if filters_applied %}
+  <section class="container filtered-orders-panel reveal delay-1">
+    <article class="card">
+      <h2>
+        Filtered Results
+        <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
+                     color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
+          {{ filtered_orders|length }} match{% if filtered_orders|length != 1 %}es{% endif %}
+        </span>
+      </h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Status</th>
+              <th>Current Location</th>
+              <th>Expected Delivery</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in filtered_orders %}
+            <tr>
+              <td><strong>{{ order.tracking_number }}</strong></td>
+              <td><span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span></td>
+              <td>{{ order.current_location|default:"-" }}</td>
+              <td>{{ order.expected_delivery_date|default:"-" }}</td>
+              <td>
+                <div class="quick-row-actions">
+                  <a href="{% url 'edit_order' order.id %}" class="btn btn-sm btn-outline">Edit</a>
+                  <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-sm btn-secondary">Receipt</a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">No orders matched this filter.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+  {% endif %}
+
   <!-- ══════════════════════════════════════════════
        MAIN GRID: CREATE FORM + ORDERS TABLE
   ══════════════════════════════════════════════ -->
@@ -102,10 +149,10 @@
     <!-- ORDERS TABLE CARD -->
     <article class="card wide reveal delay-1">
       <h2>
-        Shipment Orders
+        All Shipment Orders
         <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
                      color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
-          {{ orders|length }} record{% if orders|length != 1 %}s{% endif %}
+          {{ total_orders }} record{% if total_orders != 1 %}s{% endif %}
         </span>
       </h2>
 
@@ -123,7 +170,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for order in orders %}
+            {% for order in all_orders %}
               <tr>
 
                 <!-- Tracking # + date -->
@@ -300,10 +347,9 @@ For assistance:
                 <td colspan="7">
                   <div style="text-align:center;padding:3rem 2rem;color:var(--muted);">
                     <div style="font-size:2.5rem;margin-bottom:0.75rem;">📦</div>
-                    <p style="font-size:0.95rem;">No shipments match your filter.</p>
+                    <p style="font-size:0.95rem;">No shipment orders created yet.</p>
                     <p style="font-size:0.82rem;margin-top:0.4rem;">
-                      Create a new order or
-                      <a href="{% url 'dashboard' %}" style="color:var(--amber);">reset the search</a>.
+                      Create a new order from the form on this page.
                     </p>
                   </div>
                 </td>
@@ -346,10 +392,10 @@ For assistance:
           tension: 0.4,
           fill: true,
           borderColor: '#e8a020',
-          backgroundColor: 'rgba(232,160,32,0.08)',
+          backgroundColor: 'rgba(232,160,32,0.16)',
           pointRadius: 5,
           pointBackgroundColor: '#e8a020',
-          pointBorderColor: '#0c0e12',
+          pointBorderColor: '#f7f9ff',
           pointBorderWidth: 2,
         }]
       },
@@ -359,23 +405,23 @@ For assistance:
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#171b26',
-            borderColor: 'rgba(232,160,32,0.3)',
+            backgroundColor: '#304161',
+            borderColor: 'rgba(232,160,32,0.45)',
             borderWidth: 1,
             titleColor: '#e8a020',
-            bodyColor: '#c8cdd8',
+            bodyColor: '#e2e8f5',
             padding: 12,
           }
         },
         scales: {
           x: {
-            grid: { color: 'rgba(255,255,255,0.04)' },
-            ticks: { color: '#6b7591', font: { family: 'JetBrains Mono', size: 11 } }
+            grid: { color: 'rgba(255,255,255,0.12)' },
+            ticks: { color: '#b2bfd7', font: { family: 'JetBrains Mono', size: 11 } }
           },
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.04)' },
-            ticks: { precision: 0, color: '#6b7591', font: { family: 'JetBrains Mono', size: 11 } }
+            grid: { color: 'rgba(255,255,255,0.12)' },
+            ticks: { precision: 0, color: '#b2bfd7', font: { family: 'JetBrains Mono', size: 11 } }
           }
         }
       }
