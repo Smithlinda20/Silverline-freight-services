@@ -130,12 +130,11 @@ class BackendAuthTests(TestCase):
         response = self.client.get(reverse("dashboard"), {"tracking": self.order.tracking_number})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.order.tracking_number)
-        self.assertContains(response, "Filtered Results")
         self.assertTrue(response.context["filters_applied"])
-        filtered_orders = list(response.context["filtered_orders"])
-        self.assertEqual(len(filtered_orders), 1)
-        self.assertEqual(filtered_orders[0].id, self.order.id)
-        self.assertNotEqual(filtered_orders[0].id, other_order.id)
+        orders_for_management = list(response.context["orders_for_management"])
+        self.assertEqual(len(orders_for_management), 1)
+        self.assertEqual(orders_for_management[0].id, self.order.id)
+        self.assertNotEqual(orders_for_management[0].id, other_order.id)
 
     def test_edit_order_updates_item_name(self):
         self.client.login(username=self.user.username, password="TestPass123!")

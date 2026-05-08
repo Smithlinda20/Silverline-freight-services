@@ -338,6 +338,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         filtered_orders = filtered_orders.filter(status=status_filter)
 
     filters_applied = bool(search_query or status_filter)
+    orders_for_management = filtered_orders if filters_applied else base_orders
 
     create_form = ShipmentOrderCreateForm()
     hold_form = ShipmentHoldForm()
@@ -364,6 +365,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "all_orders": base_orders,
         "filtered_orders": filtered_orders if filters_applied else base_orders.none(),
         "filters_applied": filters_applied,
+        "orders_for_management": orders_for_management,
         "search_query": search_query,
         "status_filter": status_filter,
         "total_orders": base_orders.count(),

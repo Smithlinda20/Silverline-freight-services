@@ -114,53 +114,6 @@
     </form>
   </section>
 
-  {% if filters_applied %}
-  <section class="container filtered-orders-panel reveal delay-1">
-    <article class="card">
-      <h2>
-        Filtered Results
-        <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
-                     color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
-          {{ filtered_orders|length }} match{% if filtered_orders|length != 1 %}es{% endif %}
-        </span>
-      </h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Tracking</th>
-              <th>Status</th>
-              <th>Current Location</th>
-              <th>Expected Delivery</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in filtered_orders %}
-            <tr>
-              <td><strong>{{ order.tracking_number }}</strong></td>
-              <td><span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span></td>
-              <td>{{ order.current_location|default:"-" }}</td>
-              <td>{{ order.expected_delivery_date|default:"-" }}</td>
-              <td>
-                <div class="quick-row-actions">
-                  <a href="{% url 'edit_order' order.id %}" class="btn btn-sm btn-outline">Edit</a>
-                  <a href="{% url 'download_receipt_jpg' order.id %}" class="btn btn-sm btn-secondary">Receipt</a>
-                </div>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="5">No orders matched this filter.</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </article>
-  </section>
-  {% endif %}
-
   <!-- ══════════════════════════════════════════════
        MAIN GRID: CREATE FORM + ORDERS TABLE
   ══════════════════════════════════════════════ -->
@@ -189,10 +142,10 @@
     <!-- ORDERS TABLE CARD -->
     <article class="card wide reveal delay-1">
       <h2>
-        All Shipment Orders
+        Shipment Orders
         <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:400;
                      color:var(--muted);margin-left:0.75rem;text-transform:none;letter-spacing:0;">
-          {{ total_orders }} record{% if total_orders != 1 %}s{% endif %}
+          {{ orders_for_management|length }} record{% if orders_for_management|length != 1 %}s{% endif %}
         </span>
       </h2>
 
@@ -210,7 +163,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for order in all_orders %}
+            {% for order in orders_for_management %}
               <tr>
 
                 <!-- Tracking # + date -->
@@ -387,10 +340,17 @@ For assistance:
                 <td colspan="7">
                   <div style="text-align:center;padding:3rem 2rem;color:var(--muted);">
                     <div style="font-size:2.5rem;margin-bottom:0.75rem;">📦</div>
-                    <p style="font-size:0.95rem;">No shipment orders created yet.</p>
-                    <p style="font-size:0.82rem;margin-top:0.4rem;">
-                      Create a new order from the form on this page.
-                    </p>
+                    {% if filters_applied %}
+                      <p style="font-size:0.95rem;">No shipments match your filter.</p>
+                      <p style="font-size:0.82rem;margin-top:0.4rem;">
+                        Adjust filter values or <a href="{% url 'dashboard' %}" style="color:var(--amber);">reset filter</a>.
+                      </p>
+                    {% else %}
+                      <p style="font-size:0.95rem;">No shipment orders created yet.</p>
+                      <p style="font-size:0.82rem;margin-top:0.4rem;">
+                        Create a new order from the form on this page.
+                      </p>
+                    {% endif %}
                   </div>
                 </td>
               </tr>
